@@ -1,0 +1,17 @@
+.flavours {
+    display: grid;
+    grid-template-columns: 200px 100px;
+    margin-top: 32px;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: 200px 150px 100px;
+    margin-top: 32px;
+}
+
+.measurement {
+    display: grid;
+    grid-template-columns: 200px 50px 50px 50px;
+    margin-top: 32px;
+}
