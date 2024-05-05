@@ -20,7 +20,14 @@ class Application {
     }
 
     fun updateFlavour(flavour: FlavourVersion, name: String): FlavourVersion {
-        TODO()
+        val newFlavour = FlavourVersion(
+            flavour.version,
+            versionStream.nextVersion,
+            0f,
+            name
+        )
+        versionStream.upsert(newFlavour)
+        return newFlavour
     }
 
     val products: List<ProductVersion>
@@ -40,7 +47,7 @@ class Application {
         return productVersion
     }
 
-    fun updateProduct(productVersion: ProductVersion, flavour: FlavourVersion, name: String): ProductVersion {
+    fun updateProduct(productVersion: ProductVersion, name: String, flavour: FlavourVersion): ProductVersion {
         val newVersion = ProductVersion(
             productVersion.id,
             versionStream.nextVersion,

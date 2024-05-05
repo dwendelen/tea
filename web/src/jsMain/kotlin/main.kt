@@ -9,7 +9,6 @@ import org.w3c.fetch.*
 import se.daan.tea.api.Flavour
 import se.daan.tea.web.model.Application
 import se.daan.tea.web.model.FlavourVersion
-import se.daan.tea.web.model.MeasurementData
 import se.daan.tea.web.model.ProductVersion
 
 
@@ -23,11 +22,28 @@ fun main() {
                 window.location.hash = "#/home"
             } else {
                 body.clear()
+                val end = path.indexOf('/', 2)
+                val correctedEnd = if(end == -1) {
+                    path.length
+                } else {
+                    end
+                }
+                val firstPart = path.substring(0..<correctedEnd)
                 Content(body).apply {
-                    when (path) {
+                    when (firstPart) {
                         "#/home" -> home(application)
                         "#/order" -> order(application)
                         "#/manage" -> manage(application)
+                        "#/add-flavour" -> addFlavour(application)
+                        "#/flavours" -> {
+                            val id = path.substring(end + 1).toInt()
+                            editFlavour(application, id)
+                        }
+                        "#/add-product" -> addProduct(application)
+                        "#/products" -> {
+                            val id = path.substring(end + 1).toInt()
+                            editProduct(application, id)
+                        }
                         else -> error()
                     }
                 }
@@ -64,16 +80,11 @@ fun Content.order(application: Application) {
 fun Content.manage(application: Application) {
     h1 { text("Manage") }
     div {
-//        var inputText: HTMLInputElement? = null
         classList("flavours")
         div { text("Flavour") }
-//        div { }
-//        div { inputText = textInput {} }
         div {
             val button = button { text("Create") }
             button.onclick = {
-//                application.newFlavour(inputText!!.value)
-//                inputText!!.value = ""
                 window.location.hash = "#/add-flavour"
                 null
             }
@@ -99,22 +110,12 @@ fun Content.manage(application: Application) {
     }
 
     div {
-//        var inputText: HTMLInputElement? = null
-//        var select: HTMLSelectElement? = null
         classList("products")
         div { text("Product") }
         div { text("Flavour") }
-//        div { }
-//        div { inputText = textInput {} }
-//        div { select = dropdown(application.flavours, { it.id.toString() }, { it.name }) }
         div {
             val button = button { text("Create") }
             button.onclick = {
-//                val flavourId = select!!.value
-//                val flavour = application.flavours.first { it.id.toString() == flavourId }
-//                application.newProduct(inputText!!.value, flavour)
-//                inputText!!.value = ""
-//                select!!.value = ""
                 window.location.hash = "#/add-product"
                 null
             }
@@ -141,6 +142,110 @@ fun Content.manage(application: Application) {
     }
 }
 
+fun Content.addFlavour(application: Application) {
+    var nameInput: HTMLInputElement? = null
+
+    h1 { text("Add Flavour") }
+    div {
+        classList("form")
+        div { text("Name") }
+        div { nameInput = textInput {} }
+        div { }
+        div {
+            val button = button { text("Create") }
+            button.onclick = {
+                application.newFlavour(nameInput!!.value)
+                window.location.hash = "#/manage"
+                null
+            }
+        }
+    }
+}
+
+fun Content.editFlavour(application: Application, id: Int) {
+    val currentFlavour = application.flavours
+        .first { it.id == id }
+
+    var nameInput: HTMLInputElement? = null
+
+    h1 { text("Edit Flavour") }
+    div {
+        classList("form")
+        div { text("Name") }
+        div {
+            nameInput = textInput {}
+            nameInput!!.value = currentFlavour.name
+        }
+        div { }
+        div {
+            val button = button { text("Save") }
+            button.onclick = {
+                application.updateFlavour(currentFlavour, nameInput!!.value)
+                window.location.hash = "#/manage"
+                null
+            }
+        }
+    }
+}
+
+fun Content.addProduct(application: Application) {
+    var nameInput: HTMLInputElement? = null
+    var flavourInput: HTMLSelectElement? = null
+
+    h1 { text("Add Product") }
+    div {
+        classList("form")
+        div { text("Name") }
+        div { nameInput = textInput {} }
+        div { text("Flavour") }
+        div { flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name }) }
+        div { }
+        div {
+            val button = button { text("Create") }
+            button.onclick = {
+                val flavourId = flavourInput!!.value
+                val flavour = application.flavours.first { it.id.toString() == flavourId }
+                application.newProduct(nameInput!!.value, flavour)
+                window.location.hash = "#/manage"
+                null
+            }
+        }
+    }
+}
+
+fun Content.editProduct(application: Application, id: Int) {
+    val currentProduct = application.products
+        .first { it.id == id }
+
+    var nameInput: HTMLInputElement? = null
+    var flavourInput: HTMLSelectElement? = null
+
+    h1 { text("Add Product") }
+    div {
+        classList("form")
+        div { text("Name") }
+        div {
+            nameInput = textInput {}
+            nameInput!!.value = currentProduct.name
+        }
+        div { text("Flavour") }
+        div {
+            flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name })
+            flavourInput!!.value = currentProduct.flavour.id.toString()
+        }
+        div { }
+        div {
+            val button = button { text("Save") }
+            button.onclick = {
+                val flavourId = flavourInput!!.value
+                val flavour = application.flavours.first { it.id.toString() == flavourId }
+                application.updateProduct(currentProduct, nameInput!!.value, flavour)
+                window.location.hash = "#/manage"
+                null
+            }
+        }
+    }
+}
 
 fun Content.error() {
     h1 { text("Error") }
