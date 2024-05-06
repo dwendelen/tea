@@ -15,6 +15,9 @@
     grid-template-columns: 200px 50px 50px 50px;
     margin-top: 32px;
 }
+.measurement input {
+    width: 32px;
+}
 
 .form {
     display: grid;

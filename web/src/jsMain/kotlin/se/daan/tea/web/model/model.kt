@@ -35,25 +35,27 @@ class Application {
             .values
             .sortedBy { it.id }
 
-    fun newProduct(name: String, flavour: FlavourVersion): ProductVersion {
+    fun newProduct(name: String, flavour: FlavourVersion, deprecated: Boolean): ProductVersion {
         val productVersion = ProductVersion(
             versionStream.nextId<ProductVersion>(),
             versionStream.nextVersion,
             0f,
             name,
-            flavour
+            flavour,
+            deprecated
         )
         versionStream.upsert(productVersion)
         return productVersion
     }
 
-    fun updateProduct(productVersion: ProductVersion, name: String, flavour: FlavourVersion): ProductVersion {
+    fun updateProduct(productVersion: ProductVersion, name: String, flavour: FlavourVersion, deprecated: Boolean): ProductVersion {
         val newVersion = ProductVersion(
             productVersion.id,
             versionStream.nextVersion,
             0f,
             name,
-            flavour
+            flavour,
+            deprecated
         )
         versionStream.upsert(newVersion)
         return newVersion
@@ -111,7 +113,8 @@ data class ProductVersion(
     override val version: Int,
     val order: Float,
     val name: String,
-    val flavour: FlavourVersion
+    val flavour: FlavourVersion,
+    val deprecated: Boolean
 ): EntityVersion
 data class MeasurementVersion(
     override val id: Int,

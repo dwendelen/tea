@@ -181,6 +181,12 @@ open class Content(
         return input
     }
 
+    fun checkbox(content: Content.() -> Unit): HTMLInputElement {
+        val input = simple<HTMLInputElement>("input", content)
+        input.type = "checkbox"
+        return input
+    }
+
     fun <T> dropdown(items: List<T>, toVal: (T) -> String, toText: (T) -> String): HTMLSelectElement {
         val select = document.createElement("select") as HTMLSelectElement
         items.forEach {
