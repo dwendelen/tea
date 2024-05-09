@@ -16,6 +16,8 @@ import kotlin.js.Date
 
 fun main() {
     val application = Application()
+
+    // Is defined in a file that is not committed to git
     testData(application)
 
     ready { body ->
@@ -354,67 +356,4 @@ fun Content.editProduct(application: Application, id: Int) {
 
 fun Content.error() {
     h1 { text("Error") }
-}
-
-fun speel() {
-    window.fetch("https://api.dev.budget.daan.se/ping", init = RequestInit(mode = RequestMode.NO_CORS))
-        .then {
-            val body = document.body!!
-
-            //body.append(Text(it.ok.toString()))
-            null
-        }
-        .catch { println(it.message) }
-
-    val prod: Flavour = Json.decodeFromString("{\"id\":4,\"name\":\"Earl Grey\"}")
-    //val body = document.body
-    //if(body == null) {
-    println("No body")
-    //} else {
-    //body.append(Text(prod.toString()))
-    //}
-
-    val application = Application()
-
-    val html = Html()
-    html.upsert(Div("flavours", "", 0f))
-    html.upsert(Div("flavour-header", "flavours", 0f))
-    html.upsert(Div("flavour-header-flavour", "flavour-header", 0f))
-    html.upsert(Div("flavour-header-action", "flavour-header", 1f))
-
-    application.versionStream.onUpsert {
-        if (it is FlavourVersion) {
-            html.upsert(Div("flavour-${it.id}", "flavours", 0f))
-            html.upsert(Text("flavour-${it.id}", "flavour-${it.id}", 0f, it.name))
-        }
-    }
-
-    html.upsert(Div("flavour-create", "flavours", 100f))
-    html.upsert(Input("flavour-create-input", "flavour-create", 0f))
-    html.upsert(Button("flavour-create-button", "flavour-create", 1f))
-    html.upsert(Text("flavour-create-button-txt", "flavour-create-button", 0f, "Create"))
-    html.upsert(InputValue("flavour-create-input", "Val1"))
-
-
-
-    application.newFlavour("Earl Grey")
-    application.newFlavour("Linde")
-    application.newFlavour("Kamille")
-
-    html.upsert(Text("test", "", 0f, "Test1"))
-    window.setTimeout({
-        html.upsert(Text("test", "", 0f, "Test2"))
-        html.upsert(InputValue("flavour-create-input", "Val2"))
-
-    }, 5000)
-}
-
-fun words() {
-    val numbers = (0..150)
-        .map { (0..194745).random() }
-
-    numbers
-        .map { "${('a'.code + it.toString().length).toChar()}$it" }
-        .sorted()
-        .forEach { console.log(it) }
 }

@@ -1,153 +1,25 @@
 import kotlinx.browser.document
+import kotlinx.browser.window
 import org.w3c.dom.*
+import org.w3c.dom.events.Event
+import org.w3c.dom.url.URL
 
-class BiMap<K, V> {
-    private val map = mutableMapOf<K, V>()
-    private val inverse = mutableMapOf<V, K>()
-
-    operator fun get(key: K): V? {
-        return map[key]
-    }
-
-    operator fun get(value: V): K? {
-        return inverse[value]
-    }
-
-    operator fun set(key: K, value: V) {
-        map[key] = value
-        inverse[value] = key
-    }
-
-    operator fun set(value: V, key: K) {
-        set(key, value)
+fun ready(fn: (body: HTMLElement) -> Unit) {
+    if(document.readyState != DocumentReadyState.LOADING) {
+        fn(document.body!!)
+    } else {
+        document.addEventListener("DOMContentLoaded", { fn(document.body!!) })
     }
 }
 
-class Html {
-    private val texts = BiMap<String, org.w3c.dom.Text>()
-
-    fun upsert(element: HtmlThing) {
-        when (element) {
-            is Div -> {
-                val myElement = document.getElementById(element.id)
-                if(myElement == null) {
-                    val parent = if (element.parent == "") {
-                        document.body!!
-                    } else {
-                        document.getElementById(element.parent)!!
-                    }
-                    val divEl = document.createElement("div") as HTMLDivElement
-                    divEl.id = element.id
-                    divEl.dataset["order"] = element.order.toString()
-                    parent.append(divEl)
-                } else {
-                    // Nothing to do I think
-                }
-            }
-            is Text -> {
-                val myText = texts[element.id]
-                if(myText == null) {
-                    val parent = if (element.parent == "") {
-                        document.body!!
-                    } else {
-                        document.getElementById(element.parent)!!
-                    }
-                    val txt = document.createTextNode(element.text)
-                    texts[element.id] = txt
-                    parent.append(txt)
-                } else {
-                    texts[element.id]!!.data = element.text
-                    // Nothing to do I think
-                }
-            }
-            is Input -> {
-                val myElement = document.getElementById(element.id)
-                if(myElement == null) {
-                    val parent = if (element.parent == "") {
-                        document.body!!
-                    } else {
-                        document.getElementById(element.parent)!!
-                    }
-                    val inputEl = document.createElement("input") as HTMLInputElement
-                    inputEl.id = element.id
-                    inputEl.type = "text"
-                    inputEl.dataset["order"] = element.order.toString()
-                    parent.append(inputEl)
-                } else {
-                    // Nothing to do I think
-                }
-            }
-            is Button -> {
-                val myElement = document.getElementById(element.id)
-                if(myElement == null) {
-                    val parent = if (element.parent == "") {
-                        document.body!!
-                    } else {
-                        document.getElementById(element.parent)!!
-                    }
-                    val inputEl = document.createElement("button") as HTMLButtonElement
-                    inputEl.id = element.id
-                    inputEl.dataset["order"] = element.order.toString()
-                    parent.append(inputEl)
-                } else {
-                    // Nothing to do I think
-                }
-            }
-            is InputValue -> {
-                val parent = document.getElementById(element.parent)!! as HTMLInputElement
-                parent.value = element.value
-            }
-        }
-    }
-
-    fun delete(id: String) {
-        document.getElementById(id)
-            ?: texts[id]
-            ?.remove()
-    }
+fun pathChanged(fn: (String) -> Unit) {
+    fn(window.location.hash)
+    window.addEventListener("hashchange", { ev: Event ->
+        val hashChangeEvent = ev as HashChangeEvent
+        val newHash = URL(hashChangeEvent.newURL).hash
+        fn(newHash)
+    })
 }
-
-sealed interface HtmlThing {
-}
-
-sealed interface HtmlElement: HtmlThing {
-    val parent: String
-    val id: String
-    val order: Float
-}
-
-data class Div(
-    override val id: String,
-    override val parent: String,
-    override val order: Float,
-    val clazz: String? = null
-): HtmlElement
-
-data class Input(
-    override val id: String,
-    override val parent: String,
-    override val order: Float,
-    val clazz: String? = null
-): HtmlElement
-
-data class Button(
-    override val id: String,
-    override val parent: String,
-    override val order: Float,
-    val clazz: String? = null
-): HtmlElement
-
-data class InputValue(
-    val parent: String,
-    val value: String
-): HtmlThing
-
-data class Text(
-    override val id: String,
-    override val parent: String,
-    override val order: Float,
-    val text: String
-): HtmlElement
 
 
 open class Content(

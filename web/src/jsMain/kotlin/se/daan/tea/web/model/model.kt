@@ -1,5 +1,7 @@
 package se.daan.tea.web.model
 
+import kotlin.reflect.KClass
+
 class Application {
     val versionStream = VersionStream()
 
@@ -134,46 +136,37 @@ data class ProductMeasurementVersion(
 class VersionStream {
     val versionStream = mutableListOf<EntityVersion>()
     var nextVersion = 0
+    var state = mapOf<KClass<out EntityVersion>, Map<Int, EntityVersion>>()
     private var listeners: List<(EntityVersion) -> Unit> = emptyList()
 
     inline fun <reified T: EntityVersion> getCurrent(id: Int): T? {
-        return versionStream
-            .filterIsInstance<T>()
-            .lastOrNull { it.id == id }
+        return state[T::class]?.get(id) as T?
     }
 
     inline fun <reified T: EntityVersion> getCurrentAll(): Map<Int, T> {
-        return versionStream
-            .filterIsInstance<T>()
-            .groupBy { it.id }
-            .mapValues { it.value.last() }
+        return state[T::class] as Map<Int, T>? ?: emptyMap()
     }
 
     fun upsert(entity: EntityVersion) {
         if(entity.version != nextVersion) {
             throw IllegalStateException()
         }
+        nextVersion++
         versionStream.add(entity)
+        val currentEntityMap = state[entity::class]?: emptyMap()
+        val newEntityMap = currentEntityMap + (entity.id to entity)
+        state = state + (entity::class to newEntityMap)
         listeners.forEach {
             it(entity)
         }
     }
 
-    fun upsert(entities: List<EntityVersion>) {
-        for (entity in entities) {
-            if(entity.version != nextVersion) {
-                throw IllegalStateException()
-            }
-        }
-        versionStream.addAll(entities)
-    }
-
     inline fun <reified T: EntityVersion> nextId(): Int {
-        return versionStream
-            .filterIsInstance<T>()
-            .lastOrNull()
-            ?.let { it.id + 1}
-            ?:0
+        val maxId = (state[T::class] ?: emptyMap())
+            .keys
+            .maxOrNull()
+            ?: -1
+        return maxId + 1
     }
 
     fun onUpsert(fn: (EntityVersion) -> Unit) {
