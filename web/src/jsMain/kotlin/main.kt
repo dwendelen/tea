@@ -19,11 +19,26 @@ fun main() {
     testData(application)
 
     ready { body ->
+        Content(body).apply {
+            mainPage(application)
+        }
+    }
+}
+
+fun Content.mainPage(application: Application) {
+    div {
+        classList("navigation-bar")
+        a("#/home") { h1 { text("Home") } }
+        a("#/manage") { h1 { text("Manage") } }
+        a("#/order") { h1 { text("Order") } }
+    }
+    div {
         pathChanged { path ->
             if (path == "") {
                 window.location.hash = "#/home"
             } else {
-                body.clear()
+                application.versionStream.clearListeners()
+                parent.clear()
                 val end = path.indexOf('/', 2)
                 val correctedEnd = if(end == -1) {
                     path.length
@@ -31,24 +46,22 @@ fun main() {
                     end
                 }
                 val firstPart = path.substring(0..<correctedEnd)
-                Content(body).apply {
-                    when (firstPart) {
-                        "#/home" -> home(application)
-                        "#/add-measurement" -> addMeasurement(application)
-                        "#/order" -> order(application)
-                        "#/manage" -> manage(application)
-                        "#/add-flavour" -> addFlavour(application)
-                        "#/flavours" -> {
-                            val id = path.substring(end + 1).toInt()
-                            editFlavour(application, id)
-                        }
-                        "#/add-product" -> addProduct(application)
-                        "#/products" -> {
-                            val id = path.substring(end + 1).toInt()
-                            editProduct(application, id)
-                        }
-                        else -> error()
+                when (firstPart) {
+                    "#/home" -> home(application)
+                    "#/add-measurement" -> addMeasurement(application)
+                    "#/order" -> order(application)
+                    "#/manage" -> manage(application)
+                    "#/add-flavour" -> addFlavour(application)
+                    "#/flavours" -> {
+                        val id = path.substring(end + 1).toInt()
+                        editFlavour(application, id)
                     }
+                    "#/add-product" -> addProduct(application)
+                    "#/products" -> {
+                        val id = path.substring(end + 1).toInt()
+                        editProduct(application, id)
+                    }
+                    else -> error()
                 }
             }
         }

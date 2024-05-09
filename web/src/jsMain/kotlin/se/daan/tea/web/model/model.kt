@@ -179,4 +179,8 @@ class VersionStream {
     fun onUpsert(fn: (EntityVersion) -> Unit) {
         listeners = listeners + fn
     }
+
+    fun clearListeners() {
+        listeners = emptyList()
+    }
 }

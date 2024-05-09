@@ -151,7 +151,7 @@ data class Text(
 
 
 open class Content(
-    private val parent: HTMLElement
+    val parent: HTMLElement
 ) {
     private inline fun <reified T: HTMLElement> simple(tag: String, content: Content.() -> Unit): T {
         val el = document.createElement(tag) as T
@@ -169,6 +169,12 @@ open class Content(
         DivContent(div).apply(content)
         parent.append(div)
         return div
+    }
+
+    fun a(url: String, content: Content.() -> Unit): HTMLAnchorElement {
+        val anchor = simple<HTMLAnchorElement>("a", content)
+        anchor.href = url
+        return anchor
     }
 
     fun button(content: Content.() -> Unit): HTMLButtonElement {
