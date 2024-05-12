@@ -64,12 +64,32 @@ data class LocalDateTime(
                 "${hour.toString().padStart(2, '0')}:" +
                 "${minute.toString().padStart(2, '0')}"
     }
+    fun toHumanString(): String {
+        return "${year.toString().padStart(4, '0')}-" +
+                "${month.toString().padStart(2, '0')}-" +
+                "${day.toString().padStart(2, '0')} " +
+                "${hour.toString().padStart(2, '0')}:" +
+                "${minute.toString().padStart(2, '0')}"
+    }
 }
 
 fun fromString(string: String): LocalDateTime {
     val tSplit = string.split("T")
     val dashSplit = tSplit[0].split("-")
     val colonSplit = tSplit[1].split(":")
+    return LocalDateTime(
+        dashSplit[0].toInt(),
+        dashSplit[1].toInt(),
+        dashSplit[2].toInt(),
+        colonSplit[0].toInt(),
+        colonSplit[1].toInt()
+    )
+}
+
+fun fromHumanString(string: String): LocalDateTime {
+    val spaceSplit = string.split(" ")
+    val dashSplit = spaceSplit[0].split("-")
+    val colonSplit = spaceSplit[1].split(":")
     return LocalDateTime(
         dashSplit[0].toInt(),
         dashSplit[1].toInt(),

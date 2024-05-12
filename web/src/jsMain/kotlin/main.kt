@@ -151,7 +151,7 @@ fun Content.home(application: Application) {
         .forEach { meas ->
             div {
                 classList("measurement")
-                div { text(meas.date.toString()) }
+                div { text(meas.date.toHumanString()) }
                 div { text("Tray") }
                 div { text("Boxes") }
                 div { text("Loose") }
@@ -231,7 +231,7 @@ fun Content.addMeasurement(application: Application) {
                         inp.third.value.toInt()
                     )
                 }
-                application.newMeasurement(fromString(dateInput!!.value), meas)
+                application.newMeasurement(fromHumanString(dateInput!!.value), meas)
                 window.location.hash = "#/home"
                 null
             }
