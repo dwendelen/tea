@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 include(":web")
 include(":backend")
 include(":shared")
+include(":aws")
