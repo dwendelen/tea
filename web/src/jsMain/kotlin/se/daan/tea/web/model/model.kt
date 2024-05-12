@@ -1,5 +1,6 @@
 package se.daan.tea.web.model
 
+import se.daan.tea.api.LocalDateTime
 import kotlin.reflect.KClass
 
 class Application() {
@@ -68,7 +69,7 @@ class Application() {
             .values
             .sortedBy { it.id }
 
-    fun newMeasurement(date: String, measurements: List<MeasurementData>): MeasurementVersion {
+    fun newMeasurement(date: LocalDateTime, measurements: List<MeasurementData>): MeasurementVersion {
         val measurementVersions = measurements.map {  m ->
             ProductMeasurementVersion(
                 m.productVersion,
@@ -117,7 +118,7 @@ data class ProductVersion(
 data class MeasurementVersion(
     override val id: Int,
     override val version: Int,
-    val date: String,
+    val date: LocalDateTime,
     val measurements: List<ProductMeasurementVersion>
 ): EntityVersion
 data class ProductMeasurementVersion(

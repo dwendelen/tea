@@ -36,7 +36,7 @@ class VersionRepository(
                 "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
                 "t" to AttributeValue.fromS("Measurement"),
                 "id" to AttributeValue.fromN(versionedEntity.id.toString()),
-                "d" to AttributeValue.fromS(versionedEntity.date),
+                "d" to AttributeValue.fromS(versionedEntity.date.toString()),
                 "m" to AttributeValue.fromL(versionedEntity.measurements
                     .map { pm ->
                         AttributeValue.fromM(
@@ -95,7 +95,7 @@ class VersionRepository(
                         }
 
                         "Measurement" -> {
-                            Measurement(id, version, it.string("d"), it.list("m") { pm ->
+                            Measurement(id, version, fromString(it.string("d")), it.list("m") { pm ->
                                 ProductMeasurement(pm.int("pi"), pm.int("pv"), pm.int("t"), pm.int("b"), pm.int("l"))
                             })
                         }
