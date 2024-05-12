@@ -21,7 +21,9 @@ data class Product(
     val id: ProductId,
     val version: Version,
     val name: String,
-    val flavour: FlavourId,
+    val flavourId: FlavourId,
+    val flavourVersion: Version,
+    val deprecated: Boolean,
 ): VersionedEntity
 
 typealias MeasurementId = Int
@@ -35,8 +37,9 @@ data class Measurement(
 
 @Serializable
 data class ProductMeasurement(
-    val product: ProductId,
+    val productId: ProductId,
+    val productVersion: Version,
     val tray: Int,
     val boxes: Int,
-    val loose: Int
+    val loose: Int,
 )

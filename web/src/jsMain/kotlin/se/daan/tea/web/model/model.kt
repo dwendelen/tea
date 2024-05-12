@@ -2,7 +2,7 @@ package se.daan.tea.web.model
 
 import kotlin.reflect.KClass
 
-class Application {
+class Application() {
     val versionStream = VersionStream()
 
     val flavours: List<FlavourVersion>
@@ -69,12 +69,8 @@ class Application {
             .sortedBy { it.id }
 
     fun newMeasurement(date: String, measurements: List<MeasurementData>): MeasurementVersion {
-        val version = versionStream.nextVersion
-        val prodId = versionStream.nextId<ProductMeasurementVersion>()
-        val measurementVersions = measurements.mapIndexed { idx, m ->
+        val measurementVersions = measurements.map {  m ->
             ProductMeasurementVersion(
-                prodId + idx,
-                version,
                 m.productVersion,
                 m.tray,
                 m.boxes,
@@ -83,7 +79,7 @@ class Application {
         }
         val measurement = MeasurementVersion(
             versionStream.nextId<MeasurementVersion>(),
-            version,
+            versionStream.nextVersion,
             date,
             measurementVersions
         )
@@ -99,7 +95,7 @@ data class MeasurementData(
     val loose: Int
 )
 
-interface EntityVersion {
+sealed interface EntityVersion {
     val id: Int
     val version: Int
 }
@@ -125,19 +121,23 @@ data class MeasurementVersion(
     val measurements: List<ProductMeasurementVersion>
 ): EntityVersion
 data class ProductMeasurementVersion(
-    override val id: Int,
-    override val version: Int,
     val productVersion: ProductVersion,
     val tray: Int,
     val boxes: Int,
     val loose: Int
-): EntityVersion
+)
 
-class VersionStream {
+class VersionStream() {
     val versionStream = mutableListOf<EntityVersion>()
     var nextVersion = 0
     var state = mapOf<KClass<out EntityVersion>, Map<Int, EntityVersion>>()
     private var listeners: List<(EntityVersion) -> Unit> = emptyList()
+
+    inline fun <reified T: EntityVersion> get(id: Int, version: Int): T? {
+        return versionStream
+            .filterIsInstance<T>()
+            .firstOrNull { it.id == id && it.version == version }
+    }
 
     inline fun <reified T: EntityVersion> getCurrent(id: Int): T? {
         return state[T::class]?.get(id) as T?

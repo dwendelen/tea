@@ -1,30 +1,100 @@
 import kotlinx.serialization.json.*
 
-import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.dom.clear
+import kotlinx.serialization.encodeToString
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.HTMLSelectElement
 import org.w3c.fetch.*
-import se.daan.tea.api.Flavour
-import se.daan.tea.web.model.Application
-import se.daan.tea.web.model.FlavourVersion
-import se.daan.tea.web.model.MeasurementData
-import se.daan.tea.web.model.ProductVersion
+import se.daan.tea.api.*
+import se.daan.tea.web.model.*
 import kotlin.js.Date
 
 
 fun main() {
-    val application = Application()
-
-    // Is defined in a file that is not committed to git
-    testData(application)
-
-    ready { body ->
-        Content(body).apply {
-            mainPage(application)
+    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit())
+        .then { resp ->
+            if (!resp.ok) {
+                TODO()
+            }
+            resp.text()
         }
-    }
+        .then { json ->
+            val application = Application()
+
+            Json.decodeFromString<List<VersionedEntity>>(json).forEach {
+                val item = when(it) {
+                    is Flavour -> FlavourVersion(
+                        it.id,
+                        it.version,
+                        it.id.toFloat(),
+                        it.name
+                    )
+                    is Product -> ProductVersion(
+                        it.id,
+                        it.version,
+                        it.id.toFloat(),
+                        it.name,
+                        application.versionStream.get<FlavourVersion>(it.flavourId, it.flavourVersion)!!,
+                        it.deprecated
+                    )
+                    is Measurement -> MeasurementVersion(
+                        it.id,
+                        it.version,
+                        it.date,
+                        it.measurements.map { pm ->
+                            ProductMeasurementVersion(
+                                application.versionStream.get<ProductVersion>(pm.productId, pm.productVersion)!!,
+                                pm.tray,
+                                pm.boxes,
+                                pm.loose
+                            )
+                        }
+                    )
+                }
+                application.versionStream.upsert(item)
+            }
+            var pending = emptyList<EntityVersion>()
+            var sending = false
+            fun maybeSend() {
+                if(!sending && pending.size > 0) {
+                    val item = pending.first()
+                    pending = pending.drop(1)
+
+                    val mapped: VersionedEntity = when(item) {
+                        is FlavourVersion -> Flavour(item.id, item.version, item.name)
+                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.deprecated)
+                        is MeasurementVersion -> Measurement(item.id, item.version, item.date, item.measurements.map {
+                            ProductMeasurement(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
+                        })
+                    }
+
+                    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit(
+                        method = "POST",
+                        headers = js("{\"Content-Type\":\"application/json\"}"),
+                        body = Json.encodeToString(mapped)
+                    ))
+                        .then { resp ->
+                            if (!resp.ok) {
+                                TODO()
+                            }
+                            sending = false
+                            maybeSend()
+                        }
+                }
+            }
+            application.versionStream.onUpsert {
+                pending = pending + it
+                maybeSend()
+            }
+
+            ready { body ->
+                body.clear()
+                Content(body).apply {
+                    mainPage(application)
+                }
+            }
+        }
 }
 
 fun Content.mainPage(application: Application) {
@@ -39,7 +109,6 @@ fun Content.mainPage(application: Application) {
             if (path == "") {
                 window.location.hash = "#/home"
             } else {
-                application.versionStream.clearListeners()
                 parent.clear()
                 val end = path.indexOf('/', 2)
                 val correctedEnd = if(end == -1) {
@@ -200,11 +269,6 @@ fun Content.manage(application: Application) {
         application.flavours.forEach {
             flavour(it)
         }
-        application.versionStream.onUpsert {
-            if (it is FlavourVersion) {
-                flavour(it)
-            }
-        }
     }
 
     div {
@@ -231,11 +295,6 @@ fun Content.manage(application: Application) {
         }
         application.products.forEach {
             product(it)
-        }
-        application.versionStream.onUpsert {
-            if (it is ProductVersion) {
-                product(it)
-            }
         }
     }
 }

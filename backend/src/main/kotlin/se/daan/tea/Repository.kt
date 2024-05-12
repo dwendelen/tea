@@ -14,26 +14,35 @@ class VersionRepository(
         val item = when (versionedEntity) {
             is Flavour -> mapOf(
                 "pk" to AttributeValue.fromS("tea"),
-                "sk" to AttributeValue.fromS("stream-${versionedEntity.version}"),
+                "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
+                "t" to AttributeValue.fromS("Flavour"),
+                "id" to AttributeValue.fromN(versionedEntity.id.toString()),
                 "n" to AttributeValue.fromS(versionedEntity.name)
             )
 
             is Product -> mapOf(
                 "pk" to AttributeValue.fromS("tea"),
-                "sk" to AttributeValue.fromS("stream-${versionedEntity.version}"),
+                "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
+                "t" to AttributeValue.fromS("Product"),
+                "id" to AttributeValue.fromN(versionedEntity.id.toString()),
                 "n" to AttributeValue.fromS(versionedEntity.name),
-                "f" to AttributeValue.fromN(versionedEntity.flavour.toString())
+                "fi" to AttributeValue.fromN(versionedEntity.flavourId.toString()),
+                "fv" to AttributeValue.fromN(versionedEntity.flavourVersion.toString()),
+                "d" to AttributeValue.fromBool(versionedEntity.deprecated)
             )
 
             is Measurement -> mapOf(
                 "pk" to AttributeValue.fromS("tea"),
-                "sk" to AttributeValue.fromS("stream-${versionedEntity.version}"),
+                "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
+                "t" to AttributeValue.fromS("Measurement"),
+                "id" to AttributeValue.fromN(versionedEntity.id.toString()),
                 "d" to AttributeValue.fromS(versionedEntity.date),
                 "m" to AttributeValue.fromL(versionedEntity.measurements
                     .map { pm ->
                         AttributeValue.fromM(
                             mapOf(
-                                "p" to AttributeValue.fromN(pm.product.toString()),
+                                "pi" to AttributeValue.fromN(pm.productId.toString()),
+                                "pv" to AttributeValue.fromN(pm.productVersion.toString()),
                                 "t" to AttributeValue.fromN(pm.tray.toString()),
                                 "b" to AttributeValue.fromN(pm.boxes.toString()),
                                 "l" to AttributeValue.fromN(pm.loose.toString())
@@ -52,6 +61,12 @@ class VersionRepository(
         )
     }
 
+    private fun sortableInt(int: Int): String {
+        val asString = int.toString()
+        val prefix = ('a'.code + asString.length).toChar()
+        return prefix + asString
+    }
+
     fun fetchAll(start: Int): List<VersionedEntity> {
         return client.queryPaginator(
             QueryRequest.builder()
@@ -60,7 +75,7 @@ class VersionRepository(
                 .expressionAttributeValues(
                     mapOf(
                         ":pk" to AttributeValue.fromS("tea"),
-                        ":sk" to AttributeValue.fromS("stream-$start")
+                        ":sk" to AttributeValue.fromS("stream-${sortableInt(start)}")
                     )
                 )
                 .build()
@@ -69,19 +84,19 @@ class VersionRepository(
                 val pieces = it.string("sk").split("-")
                 if (pieces.size == 2 && pieces[0] == "stream") {
                     val id = it.int("id")
-                    val version = pieces[1].toInt()
+                    val version = pieces[1].drop(1).toInt()
                     when (it.string("t")) {
                         "Flavour" -> {
                             Flavour(id, version, it.string("n"))
                         }
 
                         "Product" -> {
-                            Product(id, version, it.string("n"), it.int("f"))
+                            Product(id, version, it.string("n"), it.int("fi"), it.int("fv"), it.bool("d"))
                         }
 
                         "Measurement" -> {
                             Measurement(id, version, it.string("d"), it.list("m") { pm ->
-                                ProductMeasurement(pm.int("p"), pm.int("t"), pm.int("b"), pm.int("l"))
+                                ProductMeasurement(pm.int("pi"), pm.int("pv"), pm.int("t"), pm.int("b"), pm.int("l"))
                             })
                         }
 
@@ -92,6 +107,10 @@ class VersionRepository(
                 }
             }
     }
+}
+
+private fun Map<String, AttributeValue>.bool(key: String): Boolean {
+    return this[key]?.bool()!!
 }
 
 private fun Map<String, AttributeValue>.int(key: String): Int {
