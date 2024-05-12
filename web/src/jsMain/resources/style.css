@@ -23,6 +23,9 @@
 .measurement input {
     width: 32px;
 }
+.measurement input.date {
+    width: 150px;
+}
 
 .form {
     display: grid;

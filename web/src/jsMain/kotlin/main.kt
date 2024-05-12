@@ -169,17 +169,14 @@ fun Content.addMeasurement(application: Application) {
     val previousMeasurement = application.measurements
         .lastOrNull()
     fun active(productVersion: ProductVersion): Boolean {
-        console.log(1, productVersion)
         return if(!productVersion.deprecated) {
             true
         } else {
-            console.log(2, previousMeasurement)
             if(previousMeasurement == null) {
                 false
             } else {
                 val previousMeas = previousMeasurement.measurements
                     .firstOrNull { it.productVersion.id == productVersion.id }
-                console.log(3, previousMeas)
                 if (previousMeas == null) {
                     false
                 } else {
@@ -199,14 +196,16 @@ fun Content.addMeasurement(application: Application) {
     val activeProducts = application.products
         .filter { active(it) }
 
-    console.log(activeProducts)
-
+    var dateInput: HTMLInputElement? = null
     val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
     h1 { text("Add Measurement") }
 
     div {
         classList("measurement")
-        div { text(dateString) }
+        div {
+            dateInput = textInput { classList("date") }
+            dateInput!!.value = dateString
+        }
         div { text("Tray") }
         div { text("Boxes") }
         div { text("Loose") }
@@ -232,7 +231,7 @@ fun Content.addMeasurement(application: Application) {
                         inp.third.value.toInt()
                     )
                 }
-                application.newMeasurement(dateString, meas)
+                application.newMeasurement(dateInput!!.value, meas)
                 window.location.hash = "#/home"
                 null
             }

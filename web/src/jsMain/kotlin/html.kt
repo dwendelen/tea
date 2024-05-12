@@ -32,6 +32,10 @@ open class Content(
         return el
     }
 
+    fun classList(classList: String) {
+        parent.classList.value = classList
+    }
+
     fun h1(content: Content.() -> Unit): HTMLHeadingElement {
         return simple("h1", content)
     }
@@ -87,7 +91,5 @@ open class Content(
 class DivContent(
     private val div: HTMLDivElement
 ): Content(div) {
-    fun classList(classList: String) {
-        div.classList.value = classList
-    }
+
 }
