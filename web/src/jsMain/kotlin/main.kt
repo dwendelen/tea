@@ -187,11 +187,13 @@ fun Content.addMeasurement(application: Application) {
     }
 
     val date = Date()
-    val dateString = "${date.getFullYear()}-" +
-            "${date.getMonth().inc().toString().padStart(2, '0')}-" +
-            "${date.getDate().toString().padStart(2, '0')} "+
-            "${date.getHours()}:" +
-            "${date.getMinutes().toString().padStart(2, '0')}"
+    val dateString = LocalDateTime(
+        date.getFullYear(),
+        date.getMonth().inc(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+    ).toHumanString()
 
     val activeProducts = application.products
         .filter { active(it) }
