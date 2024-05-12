@@ -1,4 +1,4 @@
-package se.daan
+package se.daan.tea
 
 import se.daan.tea.api.*
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
