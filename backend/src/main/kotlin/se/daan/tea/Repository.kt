@@ -71,12 +71,11 @@ class VersionRepository(
         return client.query(
             QueryRequest.builder()
                 .tableName(table)
-                .keyConditionExpression("pk = :pk AND sk BETWEEN :skmin AND :skmax")
+                .keyConditionExpression("pk = :pk AND begins_with(sk, :skprefix")
                 .expressionAttributeValues(
                     mapOf(
                         ":pk" to AttributeValue.fromS("tea"),
-                        ":skmin" to AttributeValue.fromS("stream-"),
-                        ":skmax" to AttributeValue.fromS("stream-z"),
+                        ":skprefix" to AttributeValue.fromS("stream-"),
                     )
                 )
                 .scanIndexForward(false)
