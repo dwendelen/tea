@@ -43,10 +43,10 @@ class VersionRepository(
                             mapOf(
                                 "pi" to AttributeValue.fromN(pm.productId.toString()),
                                 "pv" to AttributeValue.fromN(pm.productVersion.toString()),
-                                "t" to AttributeValue.fromN(pm.tray.toString()),
-                                "b" to AttributeValue.fromN(pm.boxes.toString()),
-                                "l" to AttributeValue.fromN(pm.loose.toString())
-                            )
+                                "t" to pm.tray?.let { AttributeValue.fromN(it.toString()) },
+                                "b" to pm.boxes?.let { AttributeValue.fromN(it.toString()) },
+                                "l" to pm.loose?.let { AttributeValue.fromN(it.toString()) },
+                            ).filterValues { it != null }
                         )
                     }
                 )
@@ -109,7 +109,7 @@ class VersionRepository(
             .map {
                 val pieces = it.string("sk").split("-")
                 if (pieces.size == 2 && pieces[0] == "stream") {
-                    val id = it.int("id")
+                    val id = it.int("id")!!
                     val version = pieces[1].drop(1).toInt()
                     when (it.string("t")) {
                         "Flavour" -> {
@@ -117,12 +117,12 @@ class VersionRepository(
                         }
 
                         "Product" -> {
-                            Product(id, version, it.string("n"), it.int("fi"), it.int("fv"), it.bool("d"))
+                            Product(id, version, it.string("n"), it.int("fi")!!, it.int("fv")!!, it.bool("d"))
                         }
 
                         "Measurement" -> {
                             Measurement(id, version, fromString(it.string("d")), it.list("m") { pm ->
-                                ProductMeasurement(pm.int("pi"), pm.int("pv"), pm.int("t"), pm.int("b"), pm.int("l"))
+                                ProductMeasurement(pm.int("pi")!!, pm.int("pv")!!, pm.int("t"), pm.int("b"), pm.int("l"))
                             })
                         }
 
@@ -139,8 +139,8 @@ private fun Map<String, AttributeValue>.bool(key: String): Boolean {
     return this[key]?.bool()!!
 }
 
-private fun Map<String, AttributeValue>.int(key: String): Int {
-    return this[key]?.n()!!.toInt()
+private fun Map<String, AttributeValue>.int(key: String): Int? {
+    return this[key]?.n()?.toInt()
 }
 
 private fun Map<String, AttributeValue>.string(key: String): String {

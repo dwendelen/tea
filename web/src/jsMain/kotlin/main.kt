@@ -157,9 +157,9 @@ fun Content.home(application: Application) {
                 div { text("Loose") }
                 meas.measurements.forEach { m ->
                     div { text(m.productVersion.name) }
-                    div { text(m.tray.toString()) }
-                    div { text(m.boxes.toString()) }
-                    div { text(m.loose.toString()) }
+                    div { text(m.tray?.toString()?:"") }
+                    div { text(m.boxes?.toString()?:"") }
+                    div { text(m.loose?.toString()?:"") }
                 }
             }
         }
@@ -228,9 +228,9 @@ fun Content.addMeasurement(application: Application) {
                 val meas = inputs.mapIndexed { i, inp ->
                     MeasurementData(
                         activeProducts[i],
-                        inp.first.value.toInt(),
-                        inp.second.value.toInt(),
-                        inp.third.value.toInt()
+                        inp.first.value.let { if(it == "") null else it.toInt()},
+                        inp.second.value.let { if(it == "") null else it.toInt()},
+                        inp.third.value.let { if(it == "") null else it.toInt()}
                     )
                 }
                 application.newMeasurement(fromHumanString(dateInput!!.value), meas)
