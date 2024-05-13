@@ -71,12 +71,12 @@ class VersionRepository(
         return client.query(
             QueryRequest.builder()
                 .tableName(table)
-                .keyConditionExpression("pk = :pk AND sk > :pk-min AND sk < :pk-max")
+                .keyConditionExpression("pk = :pk AND sk > :skmin AND sk < :skmax")
                 .expressionAttributeValues(
                     mapOf(
                         ":pk" to AttributeValue.fromS("tea"),
-                        ":pk-min" to AttributeValue.fromS("stream-"),
-                        ":pk-max" to AttributeValue.fromS("stream-z"),
+                        ":skmin" to AttributeValue.fromS("stream-"),
+                        ":skmax" to AttributeValue.fromS("stream-z"),
                     )
                 )
                 .scanIndexForward(false)
