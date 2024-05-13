@@ -40,8 +40,13 @@ class Handler : RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> 
                     throw UnsupportedOperationException()
                 }
                 val entity = Json.decodeFromString<VersionedEntity>(input.body)
-                repository.append(entity)
-                APIGatewayV2HTTPResponse(204, null, null, null, null, false)
+                val expectedVersion = (repository.fetchLastVersion()?:-1) + 1
+                if(entity.version != expectedVersion) {
+                    APIGatewayV2HTTPResponse(409, null, null, null, null, false)
+                } else {
+                    repository.append(entity)
+                    APIGatewayV2HTTPResponse(204, null, null, null, null, false)
+                }
             }
             else -> throw IllegalArgumentException()
         }

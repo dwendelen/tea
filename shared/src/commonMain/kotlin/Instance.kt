@@ -10,13 +10,15 @@ import kotlinx.serialization.encoding.Encoder
 typealias Version = Int
 
 @Serializable
-sealed interface VersionedEntity
+sealed interface VersionedEntity {
+    val version: Version
+}
 
 typealias FlavourId = Int
 @Serializable
 data class Flavour(
     val id: FlavourId,
-    val version: Version,
+    override val version: Version,
     val name: String
 ): VersionedEntity
 
@@ -24,7 +26,7 @@ typealias ProductId = Int
 @Serializable
 data class Product(
     val id: ProductId,
-    val version: Version,
+    override val version: Version,
     val name: String,
     val flavourId: FlavourId,
     val flavourVersion: Version,
@@ -35,7 +37,7 @@ typealias MeasurementId = Int
 @Serializable
 data class Measurement(
     val id: MeasurementId,
-    val version: Version,
+    override val version: Version,
     val date: LocalDateTime,
     val measurements: List<ProductMeasurement>
 ): VersionedEntity

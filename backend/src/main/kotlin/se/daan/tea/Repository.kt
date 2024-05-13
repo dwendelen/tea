@@ -67,6 +67,32 @@ class VersionRepository(
         return prefix + asString
     }
 
+    fun fetchLastVersion(): Int? {
+        return client.query(
+            QueryRequest.builder()
+                .tableName(table)
+                .keyConditionExpression("pk = :pk AND sk > :pk-min AND sk < :pk-max")
+                .expressionAttributeValues(
+                    mapOf(
+                        ":pk" to AttributeValue.fromS("tea"),
+                        ":pk-min" to AttributeValue.fromS("stream-"),
+                        ":pk-max" to AttributeValue.fromS("stream-z"),
+                    )
+                )
+                .scanIndexForward(false)
+                .limit(1)
+                // We want consistent because if events are coming in quickly, it must not fail
+                .consistentRead(true)
+                .build()
+        ).items()
+            .map {
+                val pieces = it.string("sk").split("-")
+                val version = pieces[1].drop(1).toInt()
+                version
+            }
+            .firstOrNull()
+    }
+
     fun fetchAll(start: Int): List<VersionedEntity> {
         return client.queryPaginator(
             QueryRequest.builder()
