@@ -71,7 +71,7 @@ class VersionRepository(
         return client.query(
             QueryRequest.builder()
                 .tableName(table)
-                .keyConditionExpression("pk = :pk AND sk > :skmin AND sk < :skmax")
+                .keyConditionExpression("pk = :pk AND sk BETWEEN :skmin AND :skmax")
                 .expressionAttributeValues(
                     mapOf(
                         ":pk" to AttributeValue.fromS("tea"),
