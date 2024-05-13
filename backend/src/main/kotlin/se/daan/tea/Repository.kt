@@ -71,7 +71,7 @@ class VersionRepository(
         return client.query(
             QueryRequest.builder()
                 .tableName(table)
-                .keyConditionExpression("pk = :pk AND begins_with(sk, :skprefix")
+                .keyConditionExpression("pk = :pk AND begins_with(sk, :skprefix)")
                 .expressionAttributeValues(
                     mapOf(
                         ":pk" to AttributeValue.fromS("tea"),
