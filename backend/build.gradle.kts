@@ -12,5 +12,14 @@ dependencies {
     implementation(libs.aws.dynamodb)
     implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.testcontainers.core)
+    testImplementation(libs.testcontainers.junit)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
