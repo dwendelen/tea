@@ -35,6 +35,6 @@
 
 .calculation-lines {
     display: grid;
-    grid-template-columns: 150px 150px 150px 75px 75px 75px 75px;
+    grid-template-columns: 150px 150px 150px 50px 50px 50px 50px 50px 75px 100px;
     margin-top: 32px;
 }

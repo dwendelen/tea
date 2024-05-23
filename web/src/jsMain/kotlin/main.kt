@@ -260,6 +260,9 @@ fun Content.order(application: Application) {
         div { text("To") }
         div { text("Diff") }
         div { text("Days") }
+        div { text("Goal") }
+        div { text("To Order") }
+        div { text("Boxes to order") }
         calculate.forEach { calc ->
             div { text(calc.productVersion.name) }
             div { text(calc.start?.toHumanString()?:"") }
@@ -267,7 +270,10 @@ fun Content.order(application: Application) {
             div { text(calc.amountStart.toString()) }
             div { text(calc.amountEnd.toString()) }
             div { text(calc.diff.toString()) }
-            div { text(calc.days?.toString()?:"") }
+            div { text(calc.days.toString()) }
+            div { text(calc.goal.toString()) }
+            div { text(calc.toOrder.toString()) }
+            div { text(calc.boxesToOrder.toString()) }
         }
     }
     console.log("Calc", calculate)

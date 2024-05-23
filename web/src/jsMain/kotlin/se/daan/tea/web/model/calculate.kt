@@ -3,6 +3,7 @@ package se.daan.tea.web.model
 import se.daan.tea.api.LocalDateTime
 import se.daan.tea.api.daysBetween
 import se.daan.tea.api.minusDays
+import kotlin.math.ceil
 
 fun calculate(application: Application, now: LocalDateTime): List<CalculationLine> {
     return application.products
@@ -19,11 +20,18 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         .filter { it.second != null && it.second != 0 && oneMonthAgo <= it.first && it.first <= now }
 
     if(measurements.isEmpty()) {
-        return CalculationLine(productVersion, null, null, 0, 0, 0)
+        return CalculationLine(productVersion, null, null, 0, 0, 0, 0, 0, 0, 0, 0)
     }
 
     val start = measurements.minBy { it.first }
     val end = measurements.maxBy { it.first }
+
+    val diff = start.second!! - end.second!! + 0
+    val days = daysBetween(start.first, end.first)
+
+    val goal = ceil(diff.toDouble() / days.toDouble() * 90).toInt()
+    val toOrder = goal - end.second!!
+    val boxesToOrder = ceil(toOrder.toFloat() / productVersion.boxSize.toDouble()).toInt()
 
     return CalculationLine(
         productVersion,
@@ -31,7 +39,12 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         end.first,
         start.second!!,
         end.second!!,
-        0
+        0,
+        diff,
+        days,
+        goal,
+        toOrder,
+        boxesToOrder
     )
 }
 
@@ -47,8 +60,12 @@ data class CalculationLine(
     val end: LocalDateTime?,
     val amountStart: Int,
     val amountEnd: Int,
-    val deltas: Int
+    val deltas: Int,
+    val diff: Int,
+    val days: Int,
+    val goal: Int,
+    val toOrder: Int,
+    val boxesToOrder: Int,
 ) {
-    val diff = amountStart - amountEnd + deltas
-    val days = if(start != null && end != null) { daysBetween(start, end) } else { null }
+
 }
