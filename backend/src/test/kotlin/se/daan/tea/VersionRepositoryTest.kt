@@ -117,7 +117,7 @@ class VersionRepositoryTest {
 
     @Test
     fun productMapping() {
-        writeRead(Product(8, 6, "bla", 89, 1, true))
+        writeRead(Product(8, 6, "bla", 89, 1, 5, true))
     }
 
     @Test

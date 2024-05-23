@@ -28,6 +28,7 @@ class VersionRepository(
                 "n" to AttributeValue.fromS(versionedEntity.name),
                 "fi" to AttributeValue.fromN(versionedEntity.flavourId.toString()),
                 "fv" to AttributeValue.fromN(versionedEntity.flavourVersion.toString()),
+                "b" to AttributeValue.fromN(versionedEntity.boxSize.toString()),
                 "d" to AttributeValue.fromBool(versionedEntity.deprecated)
             )
 
@@ -116,7 +117,7 @@ class VersionRepository(
                         }
 
                         "Product" -> {
-                            Product(id, version, it.string("n"), it.int("fi")!!, it.int("fv")!!, it.bool("d"))
+                            Product(id, version, it.string("n"), it.int("fi")!!, it.int("fv")!!, it.int("b")!!, it.bool("d"))
                         }
 
                         "Measurement" -> {

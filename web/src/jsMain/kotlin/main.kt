@@ -36,6 +36,7 @@ fun main() {
                         it.id.toFloat(),
                         it.name,
                         application.versionStream.get<FlavourVersion>(it.flavourId, it.flavourVersion)!!,
+                        it.boxSize,
                         it.deprecated
                     )
                     is Measurement -> MeasurementVersion(
@@ -63,7 +64,7 @@ fun main() {
 
                     val mapped: VersionedEntity = when(item) {
                         is FlavourVersion -> Flavour(item.id, item.version, item.name)
-                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.deprecated)
+                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.deprecated)
                         is MeasurementVersion -> Measurement(item.id, item.version, item.date, item.measurements.map {
                             ProductMeasurement(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
                         })
@@ -168,11 +169,12 @@ fun Content.home(application: Application) {
 fun Content.addMeasurement(application: Application) {
     val previousMeasurement = application.measurements
         .lastOrNull()
+
     fun active(productVersion: ProductVersion): Boolean {
-        return if(!productVersion.deprecated) {
+        return if (!productVersion.deprecated) {
             true
         } else {
-            if(previousMeasurement == null) {
+            if (previousMeasurement == null) {
                 false
             } else {
                 val previousMeas = previousMeasurement.measurements
@@ -186,14 +188,7 @@ fun Content.addMeasurement(application: Application) {
         }
     }
 
-    val date = Date()
-    val dateString = LocalDateTime(
-        date.getFullYear(),
-        date.getMonth().inc(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-    ).toHumanString()
+    val dateString = now().toHumanString()
 
     val activeProducts = application.products
         .filter { active(it) }
@@ -228,9 +223,9 @@ fun Content.addMeasurement(application: Application) {
                 val meas = inputs.mapIndexed { i, inp ->
                     MeasurementData(
                         activeProducts[i],
-                        inp.first.value.let { if(it == "") null else it.toInt()},
-                        inp.second.value.let { if(it == "") null else it.toInt()},
-                        inp.third.value.let { if(it == "") null else it.toInt()}
+                        inp.first.value.let { if (it == "") null else it.toInt() },
+                        inp.second.value.let { if (it == "") null else it.toInt() },
+                        inp.third.value.let { if (it == "") null else it.toInt() }
                     )
                 }
                 application.newMeasurement(fromHumanString(dateInput!!.value), meas)
@@ -241,8 +236,41 @@ fun Content.addMeasurement(application: Application) {
     }
 }
 
+private fun now(): LocalDateTime {
+    val date = Date()
+    val localDateTime = LocalDateTime(
+        date.getFullYear(),
+        date.getMonth().inc(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+    )
+    return localDateTime
+}
+
 fun Content.order(application: Application) {
     h1 { text("Order") }
+    val calculate = calculate(application, now())
+    div {
+        classList("calculation-lines")
+        div { text("Product") }
+        div { text("Start") }
+        div { text("End") }
+        div { text("From") }
+        div { text("To") }
+        div { text("Diff") }
+        div { text("Days") }
+        calculate.forEach { calc ->
+            div { text(calc.productVersion.name) }
+            div { text(calc.start?.toHumanString()?:"") }
+            div { text(calc.end?.toHumanString()?:"") }
+            div { text(calc.amountStart.toString()) }
+            div { text(calc.amountEnd.toString()) }
+            div { text(calc.diff.toString()) }
+            div { text(calc.days?.toString()?:"") }
+        }
+    }
+    console.log("Calc", calculate)
 }
 
 fun Content.manage(application: Application) {
@@ -349,6 +377,7 @@ fun Content.editFlavour(application: Application, id: Int) {
 fun Content.addProduct(application: Application) {
     var nameInput: HTMLInputElement? = null
     var flavourInput: HTMLSelectElement? = null
+    var boxSizeInput: HTMLInputElement? = null
     var deprecatedInput: HTMLInputElement? = null
 
     h1 { text("Add Product") }
@@ -358,6 +387,8 @@ fun Content.addProduct(application: Application) {
         div { nameInput = textInput {} }
         div { text("Flavour") }
         div { flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name }) }
+        div { text("Box size") }
+        div { boxSizeInput = textInput {} }
         div { text("Deprecated") }
         div { deprecatedInput = checkbox {} }
         div { }
@@ -366,7 +397,7 @@ fun Content.addProduct(application: Application) {
             button.onclick = {
                 val flavourId = flavourInput!!.value
                 val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.newProduct(nameInput!!.value, flavour, deprecatedInput!!.checked)
+                application.newProduct(nameInput!!.value, flavour, boxSizeInput!!.value.toInt(), deprecatedInput!!.checked)
                 window.location.hash = "#/manage"
                 null
             }
@@ -380,6 +411,7 @@ fun Content.editProduct(application: Application, id: Int) {
 
     var nameInput: HTMLInputElement? = null
     var flavourInput: HTMLSelectElement? = null
+    var boxSizeInput: HTMLInputElement? = null
     var deprecatedInput: HTMLInputElement? = null
 
     h1 { text("Add Product") }
@@ -395,6 +427,11 @@ fun Content.editProduct(application: Application, id: Int) {
             flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name })
             flavourInput!!.value = currentProduct.flavour.id.toString()
         }
+        div { text("Box Size") }
+        div {
+            boxSizeInput = textInput {}
+            boxSizeInput!!.value = currentProduct.boxSize.toString()
+        }
         div { text("Deprecated") }
         div {
             deprecatedInput = checkbox {}
@@ -406,7 +443,7 @@ fun Content.editProduct(application: Application, id: Int) {
             button.onclick = {
                 val flavourId = flavourInput!!.value
                 val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.updateProduct(currentProduct, nameInput!!.value, flavour, deprecatedInput!!.checked)
+                application.updateProduct(currentProduct, nameInput!!.value, flavour, boxSizeInput!!.size, deprecatedInput!!.checked)
                 window.location.hash = "#/manage"
                 null
             }
