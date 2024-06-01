@@ -93,9 +93,9 @@ class Application() {
 
 data class MeasurementData(
     val productVersion: ProductVersion,
-    val tray: Int?,
-    val boxes: Int?,
-    val loose: Int?
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int
 )
 
 sealed interface EntityVersion {
@@ -128,9 +128,9 @@ data class MeasurementVersion(
 ): EntityVersion
 data class ProductMeasurementVersion(
     val productVersion: ProductVersion,
-    val tray: Int?,
-    val boxes: Int?,
-    val loose: Int?
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int
 )
 
 class VersionStream() {

@@ -223,9 +223,9 @@ fun Content.addMeasurement(application: Application) {
                 val meas = inputs.mapIndexed { i, inp ->
                     MeasurementData(
                         activeProducts[i],
-                        inp.first.value.let { if (it == "") null else it.toInt() },
-                        inp.second.value.let { if (it == "") null else it.toInt() },
-                        inp.third.value.let { if (it == "") null else it.toInt() }
+                        inp.first.value.toInt(),
+                        inp.second.value.toInt(),
+                        inp.third.value.toInt()
                     )
                 }
                 application.newMeasurement(fromHumanString(dateInput!!.value), meas)
@@ -249,8 +249,9 @@ private fun now(): LocalDateTime {
 }
 
 fun Content.order(application: Application) {
-    h1 { text("Order") }
     val calculate = calculate(application, now())
+
+    h1 { text("Order") }
     div {
         classList("calculation-lines")
         div { text("Product") }
@@ -276,7 +277,6 @@ fun Content.order(application: Application) {
             div { text(calc.boxesToOrder.toString()) }
         }
     }
-    console.log("Calc", calculate)
 }
 
 fun Content.manage(application: Application) {

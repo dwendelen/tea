@@ -121,16 +121,9 @@ class VersionRepositoryTest {
     }
 
     @Test
-    fun measurementMapping_nonNull() {
+    fun measurementMapping() {
         writeRead(Measurement(8, 4, fromString("2029-08-15T19:19"), listOf(
             ProductMeasurement(5, 6, 9, 81, 2)
-        )))
-    }
-
-    @Test
-    fun measurementMapping_nullMeasurement() {
-        writeRead(Measurement(8, 4, fromString("2029-08-15T19:19"), listOf(
-            ProductMeasurement(5, 6, null, null, null)
         )))
     }
 

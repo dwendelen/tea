@@ -122,7 +122,7 @@ class VersionRepository(
 
                         "Measurement" -> {
                             Measurement(id, version, fromString(it.string("d")), it.list("m") { pm ->
-                                ProductMeasurement(pm.int("pi")!!, pm.int("pv")!!, pm.int("t"), pm.int("b"), pm.int("l"))
+                                ProductMeasurement(pm.int("pi")!!, pm.int("pv")!!, pm.int("t")!!, pm.int("b")!!, pm.int("l")!!)
                             })
                         }
 

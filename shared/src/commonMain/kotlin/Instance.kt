@@ -49,9 +49,9 @@ data class Measurement(
 data class ProductMeasurement(
     val productId: ProductId,
     val productVersion: Version,
-    val tray: Int?,
-    val boxes: Int?,
-    val loose: Int?,
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int,
 )
 
 @Serializable(with = LocalDateTimeSerializer::class)

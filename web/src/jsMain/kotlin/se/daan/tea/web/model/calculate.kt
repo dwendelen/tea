@@ -49,9 +49,9 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
 }
 
 private fun total(productMeasurement: ProductMeasurementVersion): Int {
-    return productMeasurement.tray!! +
-            productMeasurement.boxes!! * productMeasurement.productVersion.boxSize +
-            productMeasurement.loose!!
+    return productMeasurement.tray +
+            productMeasurement.boxes * productMeasurement.productVersion.boxSize +
+            productMeasurement.loose
 }
 
 data class CalculationLine(
