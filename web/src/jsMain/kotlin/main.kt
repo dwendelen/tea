@@ -249,6 +249,9 @@ private fun now(): LocalDateTime {
 }
 
 fun Content.order(application: Application) {
+    val calculate = calculate(application, now())
+    console.log(blocks(application))
+
     h1 { text("Order") }
     val calculate = calculate(application, now())
     div {
