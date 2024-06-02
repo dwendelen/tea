@@ -257,7 +257,7 @@ private fun now(): LocalDateTime {
 
 fun Content.order(application: Application) {
     val calculate = calculate(application, now())
-    val filtered = calculate.filter { it.boxesToOrder != 0 && it.productVersion.supplierData != null}
+    val filtered = calculate.lines.filter { it.boxesToOrder > 0 && it.productVersion.supplierData != null}
 
     h1 { text("Order") }
     div {
@@ -281,6 +281,7 @@ fun Content.order(application: Application) {
     }
 
     h1 { text("Calculation") }
+    text("Goal date: " + calculate.goalDate.toHumanString())
     div {
         classList("calculation-lines")
         div { text("Product") }
@@ -289,11 +290,12 @@ fun Content.order(application: Application) {
         div { text("From") }
         div { text("To") }
         div { text("Diff") }
-        div { text("Days") }
-        div { text("Goal") }
+        div { text("/") }
+        div { text("*") }
+        div { text("=") }
         div { text("To Order") }
-        div { text("Boxes to order") }
-        calculate.forEach { calc ->
+        div { text("Boxes") }
+        calculate.lines.forEach { calc ->
             div { text(calc.productVersion.name) }
             div { text(calc.start?.toHumanString()?:"") }
             div { text(calc.end?.toHumanString()?:"") }
@@ -301,6 +303,7 @@ fun Content.order(application: Application) {
             div { text(calc.amountEnd.toString()) }
             div { text(calc.diff.toString()) }
             div { text(calc.days.toString()) }
+            div { text(calc.goalDays.toString()) }
             div { text(calc.goal.toString()) }
             div { text(calc.toOrder.toString()) }
             div { text(calc.boxesToOrder.toString()) }

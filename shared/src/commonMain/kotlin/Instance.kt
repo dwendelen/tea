@@ -7,6 +7,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import se.daan.tea.api.LocalDateTime.Companion.DAYS_IN_MONTH
+import se.daan.tea.api.LocalDateTime.Companion.DAYS_OFFSET
 
 typealias Version = Int
 
@@ -106,28 +107,38 @@ data class LocalDateTime(
         val DAYS_OFFSET = listOf(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334)
     }
 }
-tailrec fun minusDays(date: LocalDateTime, days: Int): LocalDateTime {
-    if(date.day > days) {
-        return date.copy(day = date.day - days)
+fun minusDays(date: LocalDateTime, days: Int): LocalDateTime {
+    return toLocalDateTime(date.year, toDayOfYear(date) - days)
+}
+
+fun plusDays(date: LocalDateTime, days: Int): LocalDateTime {
+    return toLocalDateTime(date.year, toDayOfYear(date) + days)
+}
+
+/**
+ * First day = 0
+ */
+private fun toDayOfYear(localDateTime: LocalDateTime): Int {
+    return DAYS_OFFSET[localDateTime.month - 1] + (localDateTime.day - 1)
+}
+private tailrec fun toLocalDateTime(year: Int, dayOfYear: Int): LocalDateTime {
+    if(dayOfYear < 0) {
+        return toLocalDateTime(year - 1, dayOfYear + 365)
+    } else if(dayOfYear >= 365) {
+        return toLocalDateTime(year + 1, dayOfYear - 365)
     } else {
-        val (y, m) = if(date.month == 1) {
-            date.year - 1 to 12
-        } else {
-            date.year to date.month - 1
+        DAYS_OFFSET.forEachIndexed { i, offset ->
+            if(offset > dayOfYear) {
+                val prevIdx = i - 1
+                return LocalDateTime(year, prevIdx + 1, dayOfYear - DAYS_OFFSET[prevIdx] + 1,0, 0)
+            }
         }
-        val d = DAYS_IN_MONTH[m + 1]
-        val moved = date.copy(year = y, month = m, day = d)
-        return minusDays(moved, days - date.day)
+        return LocalDateTime(year, 12, dayOfYear - DAYS_OFFSET[11] + 1,0, 0)
     }
 }
+
 fun daysBetween(start: LocalDateTime, end: LocalDateTime): Int {
-    return if(start == end) {
-        0
-    } else if(start > end) {
-        daysBetween2(end, start, 0)
-    } else {
-        daysBetween2(start, end, 0)
-    }
+    return toDayOfYear(end) - toDayOfYear(start) + 365 * (end.year - start.year)
 }
 
 private tailrec fun daysBetween2(start: LocalDateTime, end: LocalDateTime, acc: Int): Int {
