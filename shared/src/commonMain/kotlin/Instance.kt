@@ -34,7 +34,15 @@ data class Product(
     val flavourVersion: Version,
     val boxSize: BoxSize,
     val deprecated: Boolean,
+    val supplierInfo: SupplierInfo?
 ): VersionedEntity
+
+@Serializable
+data class SupplierInfo(
+    val name: String,
+    val url: String?,
+    val code: String?
+)
 
 typealias MeasurementId = Int
 @Serializable

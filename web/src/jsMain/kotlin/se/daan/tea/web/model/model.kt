@@ -1,6 +1,7 @@
 package se.daan.tea.web.model
 
 import se.daan.tea.api.LocalDateTime
+import se.daan.tea.api.SupplierInfo
 import kotlin.reflect.KClass
 
 class Application() {
@@ -38,7 +39,15 @@ class Application() {
             .values
             .sortedBy { it.id }
 
-    fun newProduct(name: String, flavour: FlavourVersion, boxSize: Int, deprecated: Boolean): ProductVersion {
+    fun newProduct(
+        name: String,
+        flavour: FlavourVersion,
+        boxSize: Int,
+        deprecated: Boolean,
+        supplierName: String?,
+        supplierCode: String?,
+        supplierUrl: String?,
+    ): ProductVersion {
         val productVersion = ProductVersion(
             versionStream.nextId<ProductVersion>(),
             versionStream.nextVersion,
@@ -46,13 +55,25 @@ class Application() {
             name,
             flavour,
             boxSize,
-            deprecated
+            deprecated,
+            supplierName?.let {
+                SupplierData(it, supplierCode!!, supplierUrl!!)
+            }
         )
         versionStream.upsert(productVersion)
         return productVersion
     }
 
-    fun updateProduct(productVersion: ProductVersion, name: String, flavour: FlavourVersion, boxSize: Int, deprecated: Boolean): ProductVersion {
+    fun updateProduct(
+        productVersion: ProductVersion,
+        name: String,
+        flavour: FlavourVersion,
+        boxSize: Int,
+        deprecated: Boolean,
+        supplierName: String?,
+        supplierCode: String?,
+        supplierUrl: String?,
+    ): ProductVersion {
         val newVersion = ProductVersion(
             productVersion.id,
             versionStream.nextVersion,
@@ -60,7 +81,10 @@ class Application() {
             name,
             flavour,
             boxSize,
-            deprecated
+            deprecated,
+            supplierName?.let {
+                SupplierData(it, supplierCode!!, supplierUrl!!)
+            }
         )
         versionStream.upsert(newVersion)
         return newVersion
@@ -109,6 +133,7 @@ data class FlavourVersion(
     val order: Float,
     val name: String,
 ): EntityVersion
+
 data class ProductVersion(
     override val id: Int,
     override val version: Int,
@@ -116,9 +141,17 @@ data class ProductVersion(
     val name: String,
     val flavour: FlavourVersion,
     val boxSize: Int,
-    val deprecated: Boolean
+    val deprecated: Boolean,
+    val supplierData: SupplierData?
 ): EntityVersion {
 }
+
+
+data class SupplierData(
+    val name: String,
+    val url: String?,
+    val code: String?
+)
 
 data class MeasurementVersion(
     override val id: Int,

@@ -29,8 +29,17 @@ class VersionRepository(
                 "fi" to AttributeValue.fromN(versionedEntity.flavourId.toString()),
                 "fv" to AttributeValue.fromN(versionedEntity.flavourVersion.toString()),
                 "b" to AttributeValue.fromN(versionedEntity.boxSize.toString()),
-                "d" to AttributeValue.fromBool(versionedEntity.deprecated)
-            )
+                "d" to AttributeValue.fromBool(versionedEntity.deprecated),
+                "sn" to versionedEntity.supplierInfo?.let {
+                    AttributeValue.fromS(it.name)
+                },
+                "su" to versionedEntity.supplierInfo?.let {
+                    it.url?.let { u -> AttributeValue.fromS(u) }
+                },
+                "sc" to versionedEntity.supplierInfo?.let {
+                    it.code?.let { c -> AttributeValue.fromS(c) }
+                }
+            ).filterValues { it != null }
 
             is Measurement -> mapOf(
                 "pk" to AttributeValue.fromS("tea"),
@@ -117,7 +126,15 @@ class VersionRepository(
                         }
 
                         "Product" -> {
-                            Product(id, version, it.string("n"), it.int("fi")!!, it.int("fv")!!, it.int("b")!!, it.bool("d"))
+                            Product(
+                                id,
+                                version,
+                                it.string("n"),
+                                it.int("fi")!!,
+                                it.int("fv")!!,
+                                it.int("b")!!,
+                                it.bool("d"),
+                                it.nstring("sn")?.let { sn -> SupplierInfo(sn, it.nstring("su"), it.nstring("sc")) })
                         }
 
                         "Measurement" -> {
@@ -144,7 +161,11 @@ private fun Map<String, AttributeValue>.int(key: String): Int? {
 }
 
 private fun Map<String, AttributeValue>.string(key: String): String {
-    return this[key]?.s()!!
+    return nstring(key)!!
+}
+
+private fun Map<String, AttributeValue>.nstring(key: String): String? {
+    return this[key]?.s()
 }
 
 private fun <T> Map<String, AttributeValue>.list(key: String, fn: (Map<String, AttributeValue>) -> T): List<T> {

@@ -117,7 +117,17 @@ class VersionRepositoryTest {
 
     @Test
     fun productMapping() {
-        writeRead(Product(8, 6, "bla", 89, 1, 5, true))
+        writeRead(Product(8, 6, "bla", 89, 1, 5, true, SupplierInfo("sup_name", "sub_url", "sub_code")))
+    }
+
+    @Test
+    fun productMapping_noSupplierInfo() {
+        writeRead(Product(8, 6, "bla", 89, 1, 5, true, null))
+    }
+
+    @Test
+    fun productMapping_minimalSupplierInfo() {
+        writeRead(Product(8, 6, "bla", 89, 1, 5, true, SupplierInfo("sup_name", null, null)))
     }
 
     @Test

@@ -37,7 +37,14 @@ fun main() {
                         it.name,
                         application.versionStream.get<FlavourVersion>(it.flavourId, it.flavourVersion)!!,
                         it.boxSize,
-                        it.deprecated
+                        it.deprecated,
+                        it.supplierInfo?.let { s ->
+                            SupplierData(
+                                s.name,
+                                s.url,
+                                s.code
+                            )
+                        }
                     )
                     is Measurement -> MeasurementVersion(
                         it.id,
@@ -64,7 +71,7 @@ fun main() {
 
                     val mapped: VersionedEntity = when(item) {
                         is FlavourVersion -> Flavour(item.id, item.version, item.name)
-                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.deprecated)
+                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.deprecated, item.supplierData?.let { SupplierInfo(it.name, it.url, it.code) })
                         is MeasurementVersion -> Measurement(item.id, item.version, item.date, item.measurements.map {
                             ProductMeasurement(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
                         })
@@ -158,9 +165,9 @@ fun Content.home(application: Application) {
                 div { text("Loose") }
                 meas.measurements.forEach { m ->
                     div { text(m.productVersion.name) }
-                    div { text(m.tray?.toString()?:"") }
-                    div { text(m.boxes?.toString()?:"") }
-                    div { text(m.loose?.toString()?:"") }
+                    div { text(m.tray.toString()) }
+                    div { text(m.boxes.toString()) }
+                    div { text(m.loose.toString()) }
                 }
             }
         }
@@ -250,8 +257,30 @@ private fun now(): LocalDateTime {
 
 fun Content.order(application: Application) {
     val calculate = calculate(application, now())
+    val filtered = calculate.filter { it.boxesToOrder != 0 && it.productVersion.supplierData != null}
 
     h1 { text("Order") }
+    div {
+        classList("order-lines")
+        filtered.forEach { c ->
+            val supplierData = c.productVersion.supplierData!!
+            div { text(c.boxesToOrder.toString()) }
+            div {
+                if(supplierData.url == null) {
+                    if(supplierData.code != null) {
+                        text(supplierData.code)
+                    }
+                } else {
+                    a(supplierData.url) {
+                        text(supplierData.code ?: "no-code")
+                    }
+                }
+            }
+            div { text(supplierData.name) }
+        }
+    }
+
+    h1 { text("Calculation") }
     div {
         classList("calculation-lines")
         div { text("Product") }
@@ -386,6 +415,10 @@ fun Content.addProduct(application: Application) {
     var boxSizeInput: HTMLInputElement? = null
     var deprecatedInput: HTMLInputElement? = null
 
+    var supplierNameInput: HTMLInputElement? = null
+    var supplierUrlInput: HTMLInputElement? = null
+    var supplierCodeInput: HTMLInputElement? = null
+
     h1 { text("Add Product") }
     div {
         classList("form")
@@ -397,13 +430,27 @@ fun Content.addProduct(application: Application) {
         div { boxSizeInput = textInput {} }
         div { text("Deprecated") }
         div { deprecatedInput = checkbox {} }
+        div { text("Supplier name") }
+        div { supplierNameInput = textInput {} }
+        div { text("Supplier url") }
+        div { supplierUrlInput = textInput {} }
+        div { text("Supplier code") }
+        div { supplierCodeInput = textInput {} }
         div { }
         div {
             val button = button { text("Create") }
             button.onclick = {
                 val flavourId = flavourInput!!.value
                 val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.newProduct(nameInput!!.value, flavour, boxSizeInput!!.value.toInt(), deprecatedInput!!.checked)
+                application.newProduct(
+                    nameInput!!.value,
+                    flavour,
+                    boxSizeInput!!.value.toInt(),
+                    deprecatedInput!!.checked,
+                    supplierNameInput!!.value.ifBlank { null },
+                    supplierUrlInput!!.value.ifBlank { null },
+                    supplierCodeInput!!.value.ifBlank { null },
+                )
                 window.location.hash = "#/manage"
                 null
             }
@@ -420,7 +467,11 @@ fun Content.editProduct(application: Application, id: Int) {
     var boxSizeInput: HTMLInputElement? = null
     var deprecatedInput: HTMLInputElement? = null
 
-    h1 { text("Add Product") }
+    var supplierNameInput: HTMLInputElement? = null
+    var supplierUrlInput: HTMLInputElement? = null
+    var supplierCodeInput: HTMLInputElement? = null
+
+    h1 { text("Edit Product") }
     div {
         classList("form")
         div { text("Name") }
@@ -443,13 +494,37 @@ fun Content.editProduct(application: Application, id: Int) {
             deprecatedInput = checkbox {}
             deprecatedInput!!.checked = currentProduct.deprecated
         }
+        div { text("Supplier name") }
+        div {
+            supplierNameInput = textInput {}
+            supplierNameInput!!.value = currentProduct.supplierData?.name?:""
+        }
+        div { text("Supplier url") }
+        div {
+            supplierUrlInput = textInput {}
+            supplierUrlInput!!.value = currentProduct.supplierData?.url?:""
+        }
+        div { text("Supplier code") }
+        div {
+            supplierCodeInput = textInput {}
+            supplierCodeInput!!.value = currentProduct.supplierData?.code?:""
+        }
         div { }
         div {
             val button = button { text("Save") }
             button.onclick = {
                 val flavourId = flavourInput!!.value
                 val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.updateProduct(currentProduct, nameInput!!.value, flavour, boxSizeInput!!.size, deprecatedInput!!.checked)
+                application.updateProduct(
+                    currentProduct,
+                    nameInput!!.value,
+                    flavour,
+                    boxSizeInput!!.size,
+                    deprecatedInput!!.checked,
+                    supplierNameInput!!.value.ifBlank { null },
+                    supplierUrlInput!!.value.ifBlank { null },
+                    supplierCodeInput!!.value.ifBlank { null },
+                )
                 window.location.hash = "#/manage"
                 null
             }

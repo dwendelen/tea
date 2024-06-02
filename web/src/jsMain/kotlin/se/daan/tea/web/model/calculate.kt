@@ -16,7 +16,7 @@ fun calculate(application: Application, now: LocalDateTime): List<CalculationLin
 private fun calculate(application: Application, productVersion: ProductVersion, now: LocalDateTime): CalculationLine {
     val oneMonthAgo = minusDays(now, 30)
     val measurements = application.measurements
-        .map { it.date to it.measurements.firstOrNull { it.productVersion == productVersion }?.let{ total(it) } }
+        .map { it.date to it.measurements.firstOrNull { it.productVersion.id == productVersion.id }?.let{ total(it) } }
         .filter { it.second != null && it.second != 0 && oneMonthAgo <= it.first && it.first <= now }
 
     if(measurements.isEmpty()) {
