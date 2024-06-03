@@ -281,7 +281,12 @@ fun Content.order(application: Application) {
     }
 
     h1 { text("Calculation") }
-    text("Goal date: " + calculate.goalDate.toHumanString())
+    div {
+        text("Goal date: " + calculate.goalDate.toHumanString())
+    }
+    div {
+        text("Last measurement: " + (calculate.lastMeasurement?.date?.toHumanString() ?: "none"))
+    }
     div {
         classList("calculation-lines")
         div { text("Product") }
@@ -292,8 +297,9 @@ fun Content.order(application: Application) {
         div { text("Diff") }
         div { text("/") }
         div { text("*") }
-        div { text("=") }
-        div { text("To Order") }
+        div { text("Goal") }
+        div { text("Last") }
+        div { text("Order") }
         div { text("Boxes") }
         calculate.lines.forEach { calc ->
             div { text(calc.productVersion.name) }
@@ -305,6 +311,7 @@ fun Content.order(application: Application) {
             div { text(calc.days.toString()) }
             div { text(calc.goalDays.toString()) }
             div { text(calc.goal.toString()) }
+            div { text(calc.current.toString()) }
             div { text(calc.toOrder.toString()) }
             div { text(calc.boxesToOrder.toString()) }
         }

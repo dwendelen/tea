@@ -8,24 +8,25 @@ import kotlin.math.ceil
 
 fun calculate(application: Application, now: LocalDateTime): Calculation {
     val goalDate = plusDays(now, 90).copy(hour = 0, minute = 0)
+    val lastMeasurement = application.measurements.maxByOrNull { it.date }
 
     val lines = application.products
         .filter { !it.deprecated }
         .map {
-        calculate(application, it, goalDate)
+        calculate(application, it, goalDate, lastMeasurement)
     }
 
-    return Calculation(goalDate, lines)
+    return Calculation(goalDate, lastMeasurement, lines)
 }
 
-private fun calculate(application: Application, productVersion: ProductVersion, goalDate: LocalDateTime): CalculationLine {
+private fun calculate(application: Application, productVersion: ProductVersion, goalDate: LocalDateTime, lastMeasurement: MeasurementVersion?): CalculationLine {
     val mostRecentMeasurements = application.measurements
         .map { it.date to it.measurements.firstOrNull { it.productVersion.id == productVersion.id }?.let{ total(it) } }
         .sortedByDescending { it.first }
         .dropWhile { it.second == null || it.second == 0 }
 
     if(mostRecentMeasurements.size < 2) {
-        return CalculationLine(productVersion, null, null, 0, 0, 0, 0, 0, null, 0,0, 0, 1)
+        return CalculationLine(productVersion, null, null, 0, 0, 0, 0, 0, null, 0,0, 0, 0,1)
     }
 
     val end = mostRecentMeasurements.first()
@@ -42,10 +43,15 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
     val diff = start.second!! - end.second!! + 0
     val days = daysBetween(startDate, endDate)
 
-    val goalDays = daysBetween(endDate, goalDate)
+    val goalDays = daysBetween(lastMeasurement!!.date, goalDate)
+
+    val current = lastMeasurement
+        .measurements
+        .first { it.productVersion.id == productVersion.id }
+        .let { total(it) }
 
     val goal = ceil(diff.toDouble() / days.toDouble() * goalDays).toInt()
-    val toOrder = goal - end.second!!
+    val toOrder = goal - current
     val boxesToOrder = ceil(toOrder.toFloat() / productVersion.boxSize.toDouble()).toInt()
 
     return CalculationLine(
@@ -60,6 +66,7 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         goalDate,
         goalDays,
         goal,
+        current,
         toOrder,
         boxesToOrder
     )
@@ -73,6 +80,7 @@ private fun total(productMeasurement: ProductMeasurementVersion): Int {
 
 data class Calculation(
     val goalDate: LocalDateTime,
+    val lastMeasurement: MeasurementVersion?,
     val lines: List<CalculationLine>
 )
 
@@ -88,6 +96,7 @@ data class CalculationLine(
     val goalDate: LocalDateTime?,
     val goalDays: Int,
     val goal: Int,
+    val current: Int,
     val toOrder: Int,
     val boxesToOrder: Int,
 ) {
