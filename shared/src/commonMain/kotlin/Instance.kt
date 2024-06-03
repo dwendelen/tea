@@ -63,6 +63,24 @@ data class ProductMeasurement(
     val loose: Int,
 )
 
+typealias DeltaId = Int
+@Serializable
+data class Delta(
+    val id: DeltaId,
+    override val version: Version,
+    val date: LocalDateTime,
+    val deltas: List<ProductDelta>
+): VersionedEntity
+
+@Serializable
+data class ProductDelta(
+    val productId: ProductId,
+    val productVersion: Version,
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int,
+)
+
 @Serializable(with = LocalDateTimeSerializer::class)
 data class LocalDateTime(
     val year: Int,
@@ -140,25 +158,6 @@ private tailrec fun toLocalDateTime(year: Int, dayOfYear: Int): LocalDateTime {
 fun daysBetween(start: LocalDateTime, end: LocalDateTime): Int {
     return toDayOfYear(end) - toDayOfYear(start) + 365 * (end.year - start.year)
 }
-
-private tailrec fun daysBetween2(start: LocalDateTime, end: LocalDateTime, acc: Int): Int {
-    return if(start == end) {
-         acc
-    } else {
-        if(start.year == end.year && start.month == end.month) {
-            acc + end.day - start.day
-        } else {
-            val acc2 = acc + end.day
-            val (y, m) = if(end.month == 1) {
-                Pair(end.year - 1, 12)
-            } else {
-                Pair(end.year, end.month - 1)
-            }
-            daysBetween2(start, end.copy(year = y, month = m, day = DAYS_IN_MONTH[m]), acc2)
-        }
-    }
-}
-
 
 fun fromString(string: String): LocalDateTime {
     val tSplit = string.split("T")

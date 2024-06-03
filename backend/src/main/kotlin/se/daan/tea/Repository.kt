@@ -53,9 +53,29 @@ class VersionRepository(
                             mapOf(
                                 "pi" to AttributeValue.fromN(pm.productId.toString()),
                                 "pv" to AttributeValue.fromN(pm.productVersion.toString()),
-                                "t" to pm.tray?.let { AttributeValue.fromN(it.toString()) },
-                                "b" to pm.boxes?.let { AttributeValue.fromN(it.toString()) },
-                                "l" to pm.loose?.let { AttributeValue.fromN(it.toString()) },
+                                "t" to AttributeValue.fromN(pm.tray.toString()),
+                                "b" to AttributeValue.fromN(pm.boxes.toString()),
+                                "l" to AttributeValue.fromN(pm.loose.toString()),
+                            ).filterValues { it != null }
+                        )
+                    }
+                )
+            )
+            is Delta -> mapOf(
+                "pk" to AttributeValue.fromS("tea"),
+                "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
+                "t" to AttributeValue.fromS("Delta"),
+                "id" to AttributeValue.fromN(versionedEntity.id.toString()),
+                "d" to AttributeValue.fromS(versionedEntity.date.toString()),
+                "pd" to AttributeValue.fromL(versionedEntity.deltas
+                    .map { pm ->
+                        AttributeValue.fromM(
+                            mapOf(
+                                "pi" to AttributeValue.fromN(pm.productId.toString()),
+                                "pv" to AttributeValue.fromN(pm.productVersion.toString()),
+                                "t" to AttributeValue.fromN(pm.tray.toString()),
+                                "b" to AttributeValue.fromN(pm.boxes.toString()),
+                                "l" to AttributeValue.fromN(pm.loose.toString()),
                             ).filterValues { it != null }
                         )
                     }
@@ -140,6 +160,12 @@ class VersionRepository(
                         "Measurement" -> {
                             Measurement(id, version, fromString(it.string("d")), it.list("m") { pm ->
                                 ProductMeasurement(pm.int("pi")!!, pm.int("pv")!!, pm.int("t")!!, pm.int("b")!!, pm.int("l")!!)
+                            })
+                        }
+
+                        "Delta" -> {
+                            Delta(id, version, fromString(it.string("d")), it.list("pd") { pd ->
+                                ProductDelta(pd.int("pi")!!, pd.int("pv")!!, pd.int("t")!!, pd.int("b")!!, pd.int("l")!!)
                             })
                         }
 

@@ -1,7 +1,6 @@
 package se.daan.tea.web.model
 
 import se.daan.tea.api.LocalDateTime
-import se.daan.tea.api.SupplierInfo
 import kotlin.reflect.KClass
 
 class Application() {
@@ -95,6 +94,11 @@ class Application() {
             .values
             .sortedBy { it.id }
 
+    val deltas: List<DeltaVersion>
+        get() = versionStream.getCurrentAll<DeltaVersion>()
+            .values
+            .sortedBy { it.id }
+
     fun newMeasurement(date: LocalDateTime, measurements: List<MeasurementData>): MeasurementVersion {
         val measurementVersions = measurements.map {  m ->
             ProductMeasurementVersion(
@@ -113,9 +117,35 @@ class Application() {
         versionStream.upsert(measurement)
         return measurement
     }
+
+    fun newDelta(date: LocalDateTime, deltas: List<DeltaData>): DeltaVersion {
+        val deltaVersions = deltas.map { pd ->
+            ProductDeltaVersion(
+                pd.productVersion,
+                pd.tray,
+                pd.boxes,
+                pd.loose
+            )
+        }
+        val delta = DeltaVersion(
+            versionStream.nextId<DeltaVersion>(),
+            versionStream.nextVersion,
+            date,
+            deltaVersions
+        )
+        versionStream.upsert(delta)
+        return delta
+    }
 }
 
 data class MeasurementData(
+    val productVersion: ProductVersion,
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int
+)
+
+data class DeltaData(
     val productVersion: ProductVersion,
     val tray: Int,
     val boxes: Int,
@@ -146,7 +176,6 @@ data class ProductVersion(
 ): EntityVersion {
 }
 
-
 data class SupplierData(
     val name: String,
     val url: String?,
@@ -160,6 +189,19 @@ data class MeasurementVersion(
     val measurements: List<ProductMeasurementVersion>
 ): EntityVersion
 data class ProductMeasurementVersion(
+    val productVersion: ProductVersion,
+    val tray: Int,
+    val boxes: Int,
+    val loose: Int
+)
+
+data class DeltaVersion(
+    override val id: Int,
+    override val version: Int,
+    val date: LocalDateTime,
+    val deltas: List<ProductDeltaVersion>
+): EntityVersion
+data class ProductDeltaVersion(
     val productVersion: ProductVersion,
     val tray: Int,
     val boxes: Int,

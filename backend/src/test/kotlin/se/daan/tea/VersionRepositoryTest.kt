@@ -145,6 +145,21 @@ class VersionRepositoryTest {
         )))
     }
 
+    @Test
+    fun deltaMapping() {
+        writeRead(Delta(8, 4, fromString("2029-08-15T19:19"), listOf(
+            ProductDelta(5, 6, 9, 81, 2)
+        )))
+    }
+
+    @Test
+    fun deltaMapping_multipleDeltas() {
+        writeRead(Delta(11, 12, fromString("2029-08-15T19:19"), listOf(
+            ProductDelta(1, 2, 3, 4, 5),
+            ProductDelta(6, 7, 8, 9, 10)
+        )))
+    }
+
     private fun writeRead(expected: VersionedEntity) {
         versionRepository.append(expected)
         val actual = versionRepository.fetchAll(0).first()

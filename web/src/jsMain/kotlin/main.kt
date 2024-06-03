@@ -59,6 +59,19 @@ fun main() {
                             )
                         }
                     )
+                    is Delta -> DeltaVersion(
+                        it.id,
+                        it.version,
+                        it.date,
+                        it.deltas.map { pm ->
+                            ProductDeltaVersion(
+                                application.versionStream.get<ProductVersion>(pm.productId, pm.productVersion)!!,
+                                pm.tray,
+                                pm.boxes,
+                                pm.loose
+                            )
+                        }
+                    )
                 }
                 application.versionStream.upsert(item)
             }
@@ -74,6 +87,9 @@ fun main() {
                         is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.deprecated, item.supplierData?.let { SupplierInfo(it.name, it.url, it.code) })
                         is MeasurementVersion -> Measurement(item.id, item.version, item.date, item.measurements.map {
                             ProductMeasurement(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
+                        })
+                        is DeltaVersion -> Delta(item.id, item.version, item.date, item.deltas.map {
+                            ProductDelta(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
                         })
                     }
 
@@ -128,6 +144,7 @@ fun Content.mainPage(application: Application) {
                 when (firstPart) {
                     "#/home" -> home(application)
                     "#/add-measurement" -> addMeasurement(application)
+                    "#/add-delta" -> addDelta(application)
                     "#/order" -> order(application)
                     "#/manage" -> manage(application)
                     "#/add-flavour" -> addFlavour(application)
@@ -154,23 +171,61 @@ fun Content.home(application: Application) {
         window.location.hash = "#/add-measurement"
         null
     }
-    application.measurements
-        .reversed()
-        .forEach { meas ->
-            div {
-                classList("measurement")
-                div { text(meas.date.toHumanString()) }
-                div { text("Tray") }
-                div { text("Boxes") }
-                div { text("Loose") }
-                meas.measurements.forEach { m ->
-                    div { text(m.productVersion.name) }
-                    div { text(m.tray.toString()) }
-                    div { text(m.boxes.toString()) }
-                    div { text(m.loose.toString()) }
+    val addDelta = button { text("Add delta") }
+    addDelta.onclick = {
+        window.location.hash = "#/add-delta"
+        null
+    }
+
+    val items1 = application.measurements.map { MeasurementItem(it) }
+    val items2 = application.deltas.map { DeltaItem(it) }
+
+    (items1 + items2)
+        .sortedByDescending { it.date }
+        .forEach { item ->
+            when(item) {
+                is MeasurementItem -> {
+                    div {
+                        classList("measurement")
+                        div { text(item.measurement.date.toHumanString()) }
+                        div { text("Tray") }
+                        div { text("Boxes") }
+                        div { text("Loose") }
+                        item.measurement.measurements.forEach { m ->
+                            div { text(m.productVersion.name) }
+                            div { text(m.tray.toString()) }
+                            div { text(m.boxes.toString()) }
+                            div { text(m.loose.toString()) }
+                        }
+                    }
+                }
+                is DeltaItem -> {
+                    div {
+                        classList("measurement")
+                        div { text(item.delta.date.toHumanString()) }
+                        div { text("Tray") }
+                        div { text("Boxes") }
+                        div { text("Loose") }
+                        item.delta.deltas.forEach { m ->
+                            div { text(m.productVersion.name) }
+                            div { text(m.tray.toString()) }
+                            div { text(m.boxes.toString()) }
+                            div { text(m.loose.toString()) }
+                        }
+                    }
                 }
             }
         }
+}
+
+sealed interface HomePageItem {
+    val date: LocalDateTime
+}
+data class MeasurementItem(val measurement: MeasurementVersion): HomePageItem {
+    override val date = measurement.date
+}
+data class DeltaItem(val delta: DeltaVersion): HomePageItem {
+    override val date = delta.date
 }
 
 fun Content.addMeasurement(application: Application) {
@@ -236,6 +291,77 @@ fun Content.addMeasurement(application: Application) {
                     )
                 }
                 application.newMeasurement(fromHumanString(dateInput!!.value), meas)
+                window.location.hash = "#/home"
+                null
+            }
+        }
+    }
+}
+
+
+fun Content.addDelta(application: Application) {
+    val previousMeasurement = application.measurements
+        .lastOrNull()
+
+    fun active(productVersion: ProductVersion): Boolean {
+        return if (!productVersion.deprecated) {
+            true
+        } else {
+            if (previousMeasurement == null) {
+                false
+            } else {
+                val previousMeas = previousMeasurement.measurements
+                    .firstOrNull { it.productVersion.id == productVersion.id }
+                if (previousMeas == null) {
+                    false
+                } else {
+                    previousMeas.tray != 0 || previousMeas.boxes != 0 || previousMeas.loose != 0
+                }
+            }
+        }
+    }
+
+    val dateString = now().toHumanString()
+
+    val activeProducts = application.products
+        .filter { active(it) }
+
+    var dateInput: HTMLInputElement? = null
+    val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
+    h1 { text("Add Delta") }
+
+    div {
+        classList("delta")
+        div {
+            dateInput = textInput { classList("date") }
+            dateInput!!.value = dateString
+        }
+        div { text("Tray") }
+        div { text("Boxes") }
+        div { text("Loose") }
+        activeProducts.forEach { prod ->
+            var tray: HTMLInputElement? = null
+            var boxes: HTMLInputElement? = null
+            var loose: HTMLInputElement? = null
+            div { text(prod.name) }
+            div { tray = textInput { } }
+            div { boxes = textInput { } }
+            div { loose = textInput { } }
+            inputs.add(Triple(tray!!, boxes!!, loose!!))
+        }
+        div {}
+        div {
+            val button = button { text("Create") }
+            button.onclick = {
+                val meas = inputs.mapIndexed { i, inp ->
+                    DeltaData(
+                        activeProducts[i],
+                        inp.first.value.toInt(),
+                        inp.second.value.toInt(),
+                        inp.third.value.toInt()
+                    )
+                }
+                application.newDelta(fromHumanString(dateInput!!.value), meas)
                 window.location.hash = "#/home"
                 null
             }

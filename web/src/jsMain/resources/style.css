@@ -27,6 +27,18 @@
     width: 150px;
 }
 
+.delta {
+    display: grid;
+    grid-template-columns: 200px 50px 50px 50px;
+    margin-top: 32px;
+}
+.delta input {
+    width: 32px;
+}
+.delta input.date {
+    width: 150px;
+}
+
 .form {
     display: grid;
     grid-template-columns: 100px 200px;
