@@ -420,6 +420,7 @@ fun Content.order(application: Application) {
         div { text("End") }
         div { text("From") }
         div { text("To") }
+        div { text("Deltas") }
         div { text("Diff") }
         div { text("/") }
         div { text("*") }
@@ -433,6 +434,7 @@ fun Content.order(application: Application) {
             div { text(calc.end?.toHumanString()?:"") }
             div { text(calc.amountStart.toString()) }
             div { text(calc.amountEnd.toString()) }
+            div { text(calc.deltas.toString()) }
             div { text(calc.diff.toString()) }
             div { text(calc.days.toString()) }
             div { text(calc.goalDays.toString()) }

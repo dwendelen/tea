@@ -1,9 +1,6 @@
 package se.daan.tea.web.model
 
-import se.daan.tea.api.LocalDateTime
-import se.daan.tea.api.daysBetween
-import se.daan.tea.api.minusDays
-import se.daan.tea.api.plusDays
+import se.daan.tea.api.*
 import kotlin.math.ceil
 
 fun calculate(application: Application, now: LocalDateTime): Calculation {
@@ -40,7 +37,11 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
     val start = mostRecentOneMonthMeasurements.last()
     val startDate = start.first
 
-    val diff = start.second!! - end.second!! + 0
+    val deltas = application.deltas
+        .filter { it.date in startDate..endDate }
+        .sumOf { it.deltas.firstOrNull { it.productVersion.id == productVersion.id }?.let { total(it) } ?: 0 }
+
+    val diff = start.second!! - end.second!! + deltas
     val days = daysBetween(startDate, endDate)
 
     val goalDays = daysBetween(lastMeasurement!!.date, goalDate)
@@ -60,7 +61,7 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         end.first,
         start.second!!,
         end.second!!,
-        0,
+        deltas,
         diff,
         days,
         goalDate,
@@ -76,6 +77,12 @@ private fun total(productMeasurement: ProductMeasurementVersion): Int {
     return productMeasurement.tray +
             productMeasurement.boxes * productMeasurement.productVersion.boxSize +
             productMeasurement.loose
+}
+
+private fun total(productDelta: ProductDeltaVersion): Int {
+    return productDelta.tray +
+            productDelta.boxes * productDelta.productVersion.boxSize +
+            productDelta.loose
 }
 
 data class Calculation(
