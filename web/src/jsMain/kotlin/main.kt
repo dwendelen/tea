@@ -522,7 +522,7 @@ fun Content.editProduct(application: Application, id: Int) {
                     currentProduct,
                     nameInput!!.value,
                     flavour,
-                    boxSizeInput!!.size,
+                    boxSizeInput!!.value.toInt(),
                     deprecatedInput!!.checked,
                     supplierNameInput!!.value.ifBlank { null },
                     supplierUrlInput!!.value.ifBlank { null },
