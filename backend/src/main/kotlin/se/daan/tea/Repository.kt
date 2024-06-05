@@ -29,7 +29,7 @@ class VersionRepository(
                 "fi" to AttributeValue.fromN(versionedEntity.flavourId.toString()),
                 "fv" to AttributeValue.fromN(versionedEntity.flavourVersion.toString()),
                 "b" to AttributeValue.fromN(versionedEntity.boxSize.toString()),
-                "d" to AttributeValue.fromBool(versionedEntity.deprecated),
+                "s" to AttributeValue.fromS(versionedEntity.status.name),
                 "sn" to versionedEntity.supplierInfo?.let {
                     AttributeValue.fromS(it.name)
                 },
@@ -153,7 +153,7 @@ class VersionRepository(
                                 it.int("fi")!!,
                                 it.int("fv")!!,
                                 it.int("b")!!,
-                                it.bool("d"),
+                                ProductStatus.valueOf(it.string("s")),
                                 it.nstring("sn")?.let { sn -> SupplierInfo(sn, it.nstring("su"), it.nstring("sc")) })
                         }
 

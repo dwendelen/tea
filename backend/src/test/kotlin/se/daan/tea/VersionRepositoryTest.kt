@@ -117,17 +117,32 @@ class VersionRepositoryTest {
 
     @Test
     fun productMapping() {
-        writeRead(Product(8, 6, "bla", 89, 1, 5, true, SupplierInfo("sup_name", "sub_url", "sub_code")))
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.ACTIVE, SupplierInfo("sup_name", "sub_url", "sub_code")))
+    }
+
+    @Test
+    fun productMapping_statusActive() {
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.ACTIVE, SupplierInfo("sup_name", "sub_url", "sub_code")))
+    }
+
+    @Test
+    fun productMapping_statusDeprecated() {
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.DEPRECATED, SupplierInfo("sup_name", "sub_url", "sub_code")))
+    }
+
+    @Test
+    fun productMapping_statusInactive() {
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.INACTIVE, SupplierInfo("sup_name", "sub_url", "sub_code")))
     }
 
     @Test
     fun productMapping_noSupplierInfo() {
-        writeRead(Product(8, 6, "bla", 89, 1, 5, true, null))
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.ACTIVE, null))
     }
 
     @Test
     fun productMapping_minimalSupplierInfo() {
-        writeRead(Product(8, 6, "bla", 89, 1, 5, true, SupplierInfo("sup_name", null, null)))
+        writeRead(Product(8, 6, "bla", 89, 1, 5, ProductStatus.ACTIVE, SupplierInfo("sup_name", null, null)))
     }
 
     @Test

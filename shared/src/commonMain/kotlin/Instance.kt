@@ -26,6 +26,11 @@ data class Flavour(
 
 typealias ProductId = Int
 typealias BoxSize = Int
+enum class ProductStatus {
+    ACTIVE,
+    DEPRECATED,
+    INACTIVE
+}
 @Serializable
 data class Product(
     val id: ProductId,
@@ -34,7 +39,7 @@ data class Product(
     val flavourId: FlavourId,
     val flavourVersion: Version,
     val boxSize: BoxSize,
-    val deprecated: Boolean,
+    val status: ProductStatus,
     val supplierInfo: SupplierInfo?
 ): VersionedEntity
 

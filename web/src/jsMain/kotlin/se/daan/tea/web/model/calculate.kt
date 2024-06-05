@@ -8,7 +8,7 @@ fun calculate(application: Application, now: LocalDateTime): Calculation {
     val lastMeasurement = application.measurements.maxByOrNull { it.date }
 
     val lines = application.products
-        .filter { !it.deprecated }
+        .filter { it.status == ProductStatus.ACTIVE }
         .map {
         calculate(application, it, goalDate, lastMeasurement)
     }

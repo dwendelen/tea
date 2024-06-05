@@ -37,7 +37,7 @@ fun main() {
                         it.name,
                         application.versionStream.get<FlavourVersion>(it.flavourId, it.flavourVersion)!!,
                         it.boxSize,
-                        it.deprecated,
+                        it.status,
                         it.supplierInfo?.let { s ->
                             SupplierData(
                                 s.name,
@@ -84,7 +84,7 @@ fun main() {
 
                     val mapped: VersionedEntity = when(item) {
                         is FlavourVersion -> Flavour(item.id, item.version, item.name)
-                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.deprecated, item.supplierData?.let { SupplierInfo(it.name, it.url, it.code) })
+                        is ProductVersion -> Product(item.id, item.version, item.name, item.flavour.id, item.flavour.version, item.boxSize, item.status, item.supplierData?.let { SupplierInfo(it.name, it.url, it.code) })
                         is MeasurementVersion -> Measurement(item.id, item.version, item.date, item.measurements.map {
                             ProductMeasurement(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
                         })
@@ -229,31 +229,10 @@ data class DeltaItem(val delta: DeltaVersion): HomePageItem {
 }
 
 fun Content.addMeasurement(application: Application) {
-    val previousMeasurement = application.measurements
-        .lastOrNull()
-
-    fun active(productVersion: ProductVersion): Boolean {
-        return if (!productVersion.deprecated) {
-            true
-        } else {
-            if (previousMeasurement == null) {
-                false
-            } else {
-                val previousMeas = previousMeasurement.measurements
-                    .firstOrNull { it.productVersion.id == productVersion.id }
-                if (previousMeas == null) {
-                    false
-                } else {
-                    previousMeas.tray != 0 || previousMeas.boxes != 0 || previousMeas.loose != 0
-                }
-            }
-        }
-    }
-
     val dateString = now().toHumanString()
 
     val activeProducts = application.products
-        .filter { active(it) }
+        .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
 
     var dateInput: HTMLInputElement? = null
     val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
@@ -300,31 +279,10 @@ fun Content.addMeasurement(application: Application) {
 
 
 fun Content.addDelta(application: Application) {
-    val previousMeasurement = application.measurements
-        .lastOrNull()
-
-    fun active(productVersion: ProductVersion): Boolean {
-        return if (!productVersion.deprecated) {
-            true
-        } else {
-            if (previousMeasurement == null) {
-                false
-            } else {
-                val previousMeas = previousMeasurement.measurements
-                    .firstOrNull { it.productVersion.id == productVersion.id }
-                if (previousMeas == null) {
-                    false
-                } else {
-                    previousMeas.tray != 0 || previousMeas.boxes != 0 || previousMeas.loose != 0
-                }
-            }
-        }
-    }
-
     val dateString = now().toHumanString()
 
     val activeProducts = application.products
-        .filter { active(it) }
+        .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
 
     var dateInput: HTMLInputElement? = null
     val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
@@ -551,7 +509,7 @@ fun Content.addProduct(application: Application) {
     var nameInput: HTMLInputElement? = null
     var flavourInput: HTMLSelectElement? = null
     var boxSizeInput: HTMLInputElement? = null
-    var deprecatedInput: HTMLInputElement? = null
+    var statusInput: HTMLSelectElement? = null
 
     var supplierNameInput: HTMLInputElement? = null
     var supplierUrlInput: HTMLInputElement? = null
@@ -566,8 +524,8 @@ fun Content.addProduct(application: Application) {
         div { flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name }) }
         div { text("Box size") }
         div { boxSizeInput = textInput {} }
-        div { text("Deprecated") }
-        div { deprecatedInput = checkbox {} }
+        div { text("Status") }
+        div { statusInput = dropdown(ProductStatus.entries, {it.name}, {it.name}) }
         div { text("Supplier name") }
         div { supplierNameInput = textInput {} }
         div { text("Supplier url") }
@@ -584,7 +542,7 @@ fun Content.addProduct(application: Application) {
                     nameInput!!.value,
                     flavour,
                     boxSizeInput!!.value.toInt(),
-                    deprecatedInput!!.checked,
+                    ProductStatus.valueOf(statusInput!!.value),
                     supplierNameInput!!.value.ifBlank { null },
                     supplierUrlInput!!.value.ifBlank { null },
                     supplierCodeInput!!.value.ifBlank { null },
@@ -603,7 +561,7 @@ fun Content.editProduct(application: Application, id: Int) {
     var nameInput: HTMLInputElement? = null
     var flavourInput: HTMLSelectElement? = null
     var boxSizeInput: HTMLInputElement? = null
-    var deprecatedInput: HTMLInputElement? = null
+    var statusInput: HTMLSelectElement? = null
 
     var supplierNameInput: HTMLInputElement? = null
     var supplierUrlInput: HTMLInputElement? = null
@@ -627,10 +585,10 @@ fun Content.editProduct(application: Application, id: Int) {
             boxSizeInput = textInput {}
             boxSizeInput!!.value = currentProduct.boxSize.toString()
         }
-        div { text("Deprecated") }
+        div { text("Status") }
         div {
-            deprecatedInput = checkbox {}
-            deprecatedInput!!.checked = currentProduct.deprecated
+            statusInput = dropdown(ProductStatus.entries, {it.name}, {it.name})
+            statusInput!!.value = currentProduct.status.name
         }
         div { text("Supplier name") }
         div {
@@ -658,7 +616,7 @@ fun Content.editProduct(application: Application, id: Int) {
                     nameInput!!.value,
                     flavour,
                     boxSizeInput!!.value.toInt(),
-                    deprecatedInput!!.checked,
+                    ProductStatus.valueOf(statusInput!!.value),
                     supplierNameInput!!.value.ifBlank { null },
                     supplierUrlInput!!.value.ifBlank { null },
                     supplierCodeInput!!.value.ifBlank { null },

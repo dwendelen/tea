@@ -1,6 +1,7 @@
 package se.daan.tea.web.model
 
 import se.daan.tea.api.LocalDateTime
+import se.daan.tea.api.ProductStatus
 import kotlin.reflect.KClass
 
 class Application() {
@@ -42,7 +43,7 @@ class Application() {
         name: String,
         flavour: FlavourVersion,
         boxSize: Int,
-        deprecated: Boolean,
+        status: ProductStatus,
         supplierName: String?,
         supplierCode: String?,
         supplierUrl: String?,
@@ -54,7 +55,7 @@ class Application() {
             name,
             flavour,
             boxSize,
-            deprecated,
+            status,
             supplierName?.let {
                 SupplierData(it, supplierCode!!, supplierUrl!!)
             }
@@ -68,7 +69,7 @@ class Application() {
         name: String,
         flavour: FlavourVersion,
         boxSize: Int,
-        deprecated: Boolean,
+        status: ProductStatus,
         supplierName: String?,
         supplierCode: String?,
         supplierUrl: String?,
@@ -80,7 +81,7 @@ class Application() {
             name,
             flavour,
             boxSize,
-            deprecated,
+            status,
             supplierName?.let {
                 SupplierData(it, supplierCode!!, supplierUrl!!)
             }
@@ -171,7 +172,7 @@ data class ProductVersion(
     val name: String,
     val flavour: FlavourVersion,
     val boxSize: Int,
-    val deprecated: Boolean,
+    val status: ProductStatus,
     val supplierData: SupplierData?
 ): EntityVersion {
 }
