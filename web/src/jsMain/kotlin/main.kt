@@ -12,7 +12,7 @@ import kotlin.js.Date
 
 
 fun main() {
-    window.fetch("https://api2.dev.tea.daan.se/stream", RequestInit())
+    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit())
         .then { resp ->
             if (!resp.ok) {
                 window.location.hash = "#/error"
