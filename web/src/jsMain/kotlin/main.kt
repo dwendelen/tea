@@ -12,10 +12,10 @@ import kotlin.js.Date
 
 
 fun main() {
-    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit())
+    window.fetch("https://api2.dev.tea.daan.se/stream", RequestInit())
         .then { resp ->
             if (!resp.ok) {
-                TODO()
+                window.location.hash = "#/error"
             }
             resp.text()
         }
@@ -93,17 +93,20 @@ fun main() {
                         })
                     }
 
-                    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit(
+                    window.fetch("https://api1.dev.tea.daan.se/stream", RequestInit(
                         method = "POST",
                         headers = js("{\"Content-Type\":\"application/json\"}"),
                         body = Json.encodeToString(mapped)
                     ))
                         .then { resp ->
                             if (!resp.ok) {
-                                TODO()
+                                window.location.hash = "#/error"
                             }
                             sending = false
                             maybeSend()
+                        }
+                        .catch {
+                            window.location.hash = "#/error"
                         }
                 }
             }
@@ -118,6 +121,9 @@ fun main() {
                     mainPage(application)
                 }
             }
+        }
+        .catch {
+            window.location.hash = "#/error"
         }
 }
 
@@ -142,6 +148,7 @@ fun Content.mainPage(application: Application) {
                 }
                 val firstPart = path.substring(0..<correctedEnd)
                 when (firstPart) {
+                    "#/error" -> error()
                     "#/home" -> home(application)
                     "#/add-measurement" -> addMeasurement(application)
                     "#/add-delta" -> addDelta(application)
