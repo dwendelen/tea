@@ -93,7 +93,7 @@ fun main() {
                         })
                     }
 
-                    window.fetch("https://api1.dev.tea.daan.se/stream", RequestInit(
+                    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit(
                         method = "POST",
                         headers = js("{\"Content-Type\":\"application/json\"}"),
                         body = Json.encodeToString(mapped)
