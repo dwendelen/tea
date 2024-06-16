@@ -192,23 +192,53 @@ fun Content.home(application: Application) {
         .forEach { item ->
             when(item) {
                 is MeasurementItem -> {
+                    val previousMeasurement = application.measurements
+                        .filter { it.date < item.date }
+                        .maxByOrNull { it.date }
+
+                    val deltas =
+                        if(previousMeasurement != null) {
+                            application.deltas
+                                .filter { it.date < item.date && it.date > previousMeasurement.date }
+                        } else {
+                            null
+                        }
+
                     div {
                         classList("measurement")
                         div { text(item.measurement.date.toHumanString()) }
                         div { text("Tray") }
                         div { text("Boxes") }
                         div { text("Loose") }
+                        div { text("Diff") }
                         item.measurement.measurements.forEach { m ->
+                            val total1 = m.tray + m.boxes * m.productVersion.boxSize + m.loose
+                            val total2 = previousMeasurement
+                                ?.measurements
+                                ?.firstOrNull { it.productVersion.id == m.productVersion.id }
+                                ?.let { it.tray + it.boxes * it.productVersion.boxSize + it.loose }
+                            val dlta = deltas
+                                ?.mapNotNull { it.deltas.firstOrNull { it.productVersion.id == m.productVersion.id } }
+                                ?.sumOf { it.tray + it.boxes * it.productVersion.boxSize + it.loose }
+                                ?: 0
+
+                            val diff = if(total2 == null) {
+                                null
+                            } else {
+                                total2 + dlta - total1
+                            }
+
                             div { text(m.productVersion.name) }
                             div { text(m.tray.toString()) }
                             div { text(m.boxes.toString()) }
                             div { text(m.loose.toString()) }
+                            div { diff?.let { text(it.toString()) } }
                         }
                     }
                 }
                 is DeltaItem -> {
                     div {
-                        classList("measurement")
+                        classList("delta")
                         div { text(item.delta.date.toHumanString()) }
                         div { text("Tray") }
                         div { text("Boxes") }
@@ -238,6 +268,9 @@ data class DeltaItem(val delta: DeltaVersion): HomePageItem {
 fun Content.addMeasurement(application: Application) {
     val dateString = now().toHumanString()
 
+    val previousMeasurement = application.measurements
+        .maxByOrNull { it.date }
+
     val activeProducts = application.products
         .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
 
@@ -246,22 +279,30 @@ fun Content.addMeasurement(application: Application) {
     h1 { text("Add Measurement") }
 
     div {
-        classList("measurement")
+        classList("add-measurement")
         div {
             dateInput = textInput { classList("date") }
             dateInput!!.value = dateString
         }
         div { text("Tray") }
+        div {}
         div { text("Boxes") }
+        div {}
         div { text("Loose") }
+        div {}
         activeProducts.forEach { prod ->
+            val lastProd = previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == prod.id}
+
             var tray: HTMLInputElement? = null
             var boxes: HTMLInputElement? = null
             var loose: HTMLInputElement? = null
             div { text(prod.name) }
             div { tray = textInput { } }
+            div { lastProd?.tray?.let { text("(${it})") } }
             div { boxes = textInput { } }
+            div { lastProd?.boxes?.let { text("(${it})") } }
             div { loose = textInput { } }
+            div { lastProd?.loose?.let { text("(${it})") } }
             inputs.add(Triple(tray!!, boxes!!, loose!!))
         }
         div {}

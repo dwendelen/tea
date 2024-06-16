@@ -17,13 +17,18 @@
 
 .measurement {
     display: grid;
-    grid-template-columns: 200px 50px 50px 50px;
+    grid-template-columns: 200px 50px 50px 50px 50px;
     margin-top: 32px;
 }
-.measurement input {
+.add-measurement {
+    display: grid;
+    grid-template-columns: 200px 50px 50px 50px 50px 50px 50px;
+    margin-top: 32px;
+}
+.add-measurement input {
     width: 32px;
 }
-.measurement input.date {
+.add-measurement input.date {
     width: 150px;
 }
 
