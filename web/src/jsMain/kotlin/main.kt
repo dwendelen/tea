@@ -350,9 +350,18 @@ fun Content.addDelta(application: Application) {
             var boxes: HTMLInputElement? = null
             var loose: HTMLInputElement? = null
             div { text(prod.name) }
-            div { tray = textInput { } }
-            div { boxes = textInput { } }
-            div { loose = textInput { } }
+            div {
+                tray = textInput { }
+                tray!!.value = "0"
+            }
+            div {
+                boxes = textInput { }
+                boxes!!.value = "0"
+            }
+            div {
+                loose = textInput { }
+                loose!!.value = "0"
+            }
             inputs.add(Triple(tray!!, boxes!!, loose!!))
         }
         div {}
