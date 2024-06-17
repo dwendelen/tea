@@ -150,15 +150,15 @@ fun Content.mainPage(application: Application) {
                     "#/error" -> error()
                     "#/home" -> home(application)
                     "#/add-measurement" -> addMeasurement(application)
-                    /*"#/edit-measurement" -> {
+                    "#/edit-measurement" -> {
                         val id = path.substring(end + 1).toInt()
                         editMeasurement(application, id)
-                    }*/
+                    }
                     "#/add-delta" -> addDelta(application)
-                    /*"#/edit-delta" -> {
+                    "#/edit-delta" -> {
                         val id = path.substring(end + 1).toInt()
                         editDelta(application, id)
-                    }*/
+                    }
                     "#/order" -> order(application)
                     "#/manage" -> manage(application)
                     "#/add-flavour" -> addFlavour(application)
@@ -233,6 +233,8 @@ fun Content.home(application: Application) {
                             div { text(m.loose.toString()) }
                             div { diff?.let { text(it.toString()) } }
                         }
+                        div {}
+                        div { a("#/edit-measurement/${item.measurement.id}") { button { text("Edit") } } }
                     }
                 }
                 is DeltaItem -> {
@@ -248,6 +250,8 @@ fun Content.home(application: Application) {
                             div { text(m.boxes.toString()) }
                             div { text(m.loose.toString()) }
                         }
+                        div {}
+                        div { a("#/edit-delta/${item.delta.id}") { button { text("Edit") } } }
                     }
                 }
             }
@@ -267,8 +271,15 @@ data class DeltaItem(val delta: DeltaVersion): HomePageItem {
 class MeasurementModel(
     val id: Int,
     var date: String?,
-    val measurements: List<ProductMeasumentModel>
+    val measurements: List<ProductMeasurementModel>
 ): FormModel {
+    constructor(measurement: MeasurementVersion): this(
+        measurement.id,
+        measurement.date.toHumanString(),
+        measurement.measurements.map {
+            ProductMeasurementModel(it.productVersion, it.tray, it.boxes, it.loose)
+        }
+    )
     override fun toEntityVersion(version: Int): EntityVersion {
         return MeasurementVersion(
             id,
@@ -285,7 +296,7 @@ class MeasurementModel(
         )
     }
 }
-class ProductMeasumentModel(
+class ProductMeasurementModel(
     val productVersion: ProductVersion,
     var tray: Int? = null,
     var boxes: Int? = null,
@@ -304,10 +315,32 @@ fun Content.addMeasurement(application: Application) {
     val model = MeasurementModel(
         application.nextId,
         dateString,
-        activeProducts.map { ProductMeasumentModel(it) }
+        activeProducts.map { ProductMeasurementModel(it) }
     )
 
-    form("Add Measurement", application, model) {
+    measurementForm("Add Measurement", application, model, previousMeasurement)
+}
+
+fun Content.editMeasurement(application: Application, id: Int) {
+    val measurement = application.measurements
+        .first { it.id == id }
+
+    val previousMeasurement = application.measurements
+        .filter { it.date < measurement.date }
+        .maxByOrNull { it.date }
+
+    val model = MeasurementModel(measurement)
+
+    measurementForm("Add Delta", application, model, previousMeasurement)
+}
+
+private fun Content.measurementForm(
+    title: String,
+    application: Application,
+    model: MeasurementModel,
+    previousMeasurement: MeasurementVersion?
+) {
+    form(title, application, model) {
         classList("add-measurement")
         div { string(model::date) { classList("date") } }
         div { text("Tray") }
@@ -317,7 +350,8 @@ fun Content.addMeasurement(application: Application) {
         div { text("Loose") }
         div {}
         model.measurements.forEach { meas ->
-            val lastProd = previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id}
+            val lastProd =
+                previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
 
             div { text(meas.productVersion.name) }
             div { int(meas::tray) }
@@ -337,6 +371,14 @@ class DeltaModel(
     var date: String?,
     val deltas: List<ProductDeltaModel>
 ): FormModel {
+    constructor(delta: DeltaVersion) : this(
+        delta.id,
+        delta.date.toHumanString(),
+        delta.deltas.map {
+            ProductDeltaModel(it.productVersion, it.tray, it.boxes, it.loose)
+        }
+    )
+
     override fun toEntityVersion(version: Int): EntityVersion {
         return DeltaVersion(
             id,
@@ -372,9 +414,22 @@ fun Content.addDelta(application: Application) {
         activeProducts.map { ProductDeltaModel(it) }
     )
 
-    form("Add Delta", application, model) {
+    deltaForm("Add Delta", application, model)
+}
+
+fun Content.editDelta(application: Application, id: Int) {
+    val delta = application.deltas
+        .first { it.id == id }
+
+    val model = DeltaModel(delta)
+
+    deltaForm("Edit Delta", application, model)
+}
+
+fun Content.deltaForm(title: String, application: Application, model: DeltaModel) {
+    form(title, application, model) {
         classList("delta")
-        div { string(model::date) }
+        div { string(model::date) { classList("date")} }
         div { text("Tray") }
         div { text("Boxes") }
         div { text("Loose") }
