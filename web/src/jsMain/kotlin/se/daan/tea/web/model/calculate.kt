@@ -10,8 +10,8 @@ fun calculate(application: Application, now: LocalDateTime): Calculation {
     val lines = application.products
         .filter { it.status == ProductStatus.ACTIVE }
         .map {
-        calculate(application, it, goalDate, lastMeasurement)
-    }
+            calculate(application, it, goalDate, lastMeasurement)
+        }
 
     return Calculation(goalDate, lastMeasurement, lines)
 }

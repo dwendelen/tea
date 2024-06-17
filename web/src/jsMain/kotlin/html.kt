@@ -23,11 +23,14 @@ fun pathChanged(fn: (String) -> Unit) {
 
 
 open class Content(
-    val parent: HTMLElement
+    var parent: HTMLElement
 ) {
     private inline fun <reified T: HTMLElement> simple(tag: String, content: Content.() -> Unit): T {
         val el = document.createElement(tag) as T
+        val oldParent = parent
+        parent = el
         Content(el).apply(content)
+        parent = oldParent
         parent.append(el)
         return el
     }
@@ -42,7 +45,10 @@ open class Content(
 
     fun div(content: DivContent.() -> Unit): HTMLDivElement {
         val div = document.createElement("div") as HTMLDivElement
+        val oldParent = parent
+        parent = div
         DivContent(div).apply(content)
+        parent = oldParent
         parent.append(div)
         return div
     }
@@ -88,7 +94,7 @@ open class Content(
     }
 }
 
-class DivContent(
+open class DivContent(
     private val div: HTMLDivElement
 ): Content(div) {
 

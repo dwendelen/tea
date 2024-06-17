@@ -3,8 +3,6 @@ import kotlinx.serialization.json.*
 import kotlinx.browser.window
 import kotlinx.dom.clear
 import kotlinx.serialization.encodeToString
-import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.HTMLSelectElement
 import org.w3c.fetch.*
 import se.daan.tea.api.*
 import se.daan.tea.web.model.*
@@ -134,6 +132,7 @@ fun Content.mainPage(application: Application) {
         a("#/manage") { h1 { text("Manage") } }
         a("#/order") { h1 { text("Order") } }
     }
+
     div {
         pathChanged { path ->
             if (path == "") {
@@ -151,7 +150,15 @@ fun Content.mainPage(application: Application) {
                     "#/error" -> error()
                     "#/home" -> home(application)
                     "#/add-measurement" -> addMeasurement(application)
+                    /*"#/edit-measurement" -> {
+                        val id = path.substring(end + 1).toInt()
+                        editMeasurement(application, id)
+                    }*/
                     "#/add-delta" -> addDelta(application)
+                    /*"#/edit-delta" -> {
+                        val id = path.substring(end + 1).toInt()
+                        editDelta(application, id)
+                    }*/
                     "#/order" -> order(application)
                     "#/manage" -> manage(application)
                     "#/add-flavour" -> addFlavour(application)
@@ -173,16 +180,8 @@ fun Content.mainPage(application: Application) {
 
 fun Content.home(application: Application) {
     h1 { text("Home") }
-    val addMeas = button { text("Add measurement") }
-    addMeas.onclick = {
-        window.location.hash = "#/add-measurement"
-        null
-    }
-    val addDelta = button { text("Add delta") }
-    addDelta.onclick = {
-        window.location.hash = "#/add-delta"
-        null
-    }
+    a("#/add-measurement") { button { text("Add measurement") } }
+    a("#/add-delta") { button { text("Add delta") } }
 
     val items1 = application.measurements.map { MeasurementItem(it) }
     val items2 = application.deltas.map { DeltaItem(it) }
@@ -265,6 +264,34 @@ data class DeltaItem(val delta: DeltaVersion): HomePageItem {
     override val date = delta.date
 }
 
+class MeasurementModel(
+    val id: Int,
+    var date: String?,
+    val measurements: List<ProductMeasumentModel>
+): FormModel {
+    override fun toEntityVersion(version: Int): EntityVersion {
+        return MeasurementVersion(
+            id,
+            version,
+            fromHumanString(date!!),
+            measurements.map {
+                ProductMeasurementVersion(
+                    it.productVersion,
+                    it.tray!!,
+                    it.boxes!!,
+                    it.loose!!
+                )
+            }
+        )
+    }
+}
+class ProductMeasumentModel(
+    val productVersion: ProductVersion,
+    var tray: Int? = null,
+    var boxes: Int? = null,
+    var loose: Int? = null
+)
+
 fun Content.addMeasurement(application: Application) {
     val dateString = now().toHumanString()
 
@@ -274,57 +301,64 @@ fun Content.addMeasurement(application: Application) {
     val activeProducts = application.products
         .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
 
-    var dateInput: HTMLInputElement? = null
-    val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
-    h1 { text("Add Measurement") }
+    val model = MeasurementModel(
+        application.nextId,
+        dateString,
+        activeProducts.map { ProductMeasumentModel(it) }
+    )
 
-    div {
+    form("Add Measurement", application, model) {
         classList("add-measurement")
-        div {
-            dateInput = textInput { classList("date") }
-            dateInput!!.value = dateString
-        }
+        div { string(model::date) { classList("date") } }
         div { text("Tray") }
         div {}
         div { text("Boxes") }
         div {}
         div { text("Loose") }
         div {}
-        activeProducts.forEach { prod ->
-            val lastProd = previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == prod.id}
+        model.measurements.forEach { meas ->
+            val lastProd = previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id}
 
-            var tray: HTMLInputElement? = null
-            var boxes: HTMLInputElement? = null
-            var loose: HTMLInputElement? = null
-            div { text(prod.name) }
-            div { tray = textInput { } }
+            div { text(meas.productVersion.name) }
+            div { int(meas::tray) }
             div { lastProd?.tray?.let { text("(${it})") } }
-            div { boxes = textInput { } }
+            div { int(meas::boxes) }
             div { lastProd?.boxes?.let { text("(${it})") } }
-            div { loose = textInput { } }
+            div { int(meas::loose) }
             div { lastProd?.loose?.let { text("(${it})") } }
-            inputs.add(Triple(tray!!, boxes!!, loose!!))
         }
-        div {}
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                val meas = inputs.mapIndexed { i, inp ->
-                    MeasurementData(
-                        activeProducts[i],
-                        inp.first.value.toInt(),
-                        inp.second.value.toInt(),
-                        inp.third.value.toInt()
-                    )
-                }
-                application.newMeasurement(fromHumanString(dateInput!!.value), meas)
-                window.location.hash = "#/home"
-                null
-            }
-        }
+        div { }
+        div { saveButton() }
     }
 }
 
+class DeltaModel(
+    val id: Int,
+    var date: String?,
+    val deltas: List<ProductDeltaModel>
+): FormModel {
+    override fun toEntityVersion(version: Int): EntityVersion {
+        return DeltaVersion(
+            id,
+            version,
+            fromHumanString(date!!),
+            deltas.map {
+                ProductDeltaVersion(
+                    it.productVersion,
+                    it.tray!!,
+                    it.boxes!!,
+                    it.loose!!
+                )
+            }
+        )
+    }
+}
+class ProductDeltaModel(
+    val productVersion: ProductVersion,
+    var tray: Int? = 0,
+    var boxes: Int? = 0,
+    var loose: Int? = 0
+)
 
 fun Content.addDelta(application: Application) {
     val dateString = now().toHumanString()
@@ -332,54 +366,25 @@ fun Content.addDelta(application: Application) {
     val activeProducts = application.products
         .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
 
-    var dateInput: HTMLInputElement? = null
-    val inputs = mutableListOf<Triple<HTMLInputElement, HTMLInputElement, HTMLInputElement>>()
-    h1 { text("Add Delta") }
+    val model = DeltaModel(
+        application.nextId,
+        dateString,
+        activeProducts.map { ProductDeltaModel(it) }
+    )
 
-    div {
+    form("Add Delta", application, model) {
         classList("delta")
-        div {
-            dateInput = textInput { classList("date") }
-            dateInput!!.value = dateString
-        }
+        div { string(model::date) }
         div { text("Tray") }
         div { text("Boxes") }
         div { text("Loose") }
-        activeProducts.forEach { prod ->
-            var tray: HTMLInputElement? = null
-            var boxes: HTMLInputElement? = null
-            var loose: HTMLInputElement? = null
-            div { text(prod.name) }
-            div {
-                tray = textInput { }
-                tray!!.value = "0"
-            }
-            div {
-                boxes = textInput { }
-                boxes!!.value = "0"
-            }
-            div {
-                loose = textInput { }
-                loose!!.value = "0"
-            }
-            inputs.add(Triple(tray!!, boxes!!, loose!!))
-        }
-        div {}
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                val meas = inputs.mapIndexed { i, inp ->
-                    DeltaData(
-                        activeProducts[i],
-                        inp.first.value.toInt(),
-                        inp.second.value.toInt(),
-                        inp.third.value.toInt()
-                    )
-                }
-                application.newDelta(fromHumanString(dateInput!!.value), meas)
-                window.location.hash = "#/home"
-                null
-            }
+        model.deltas.forEach { dlta ->
+            div { text(dlta.productVersion.name) }
+            div { int(dlta::tray) }
+            div { int(dlta::boxes) }
+            div { int(dlta::loose) }
+            div { }
+            div { saveButton() }
         }
     }
 }
@@ -466,22 +471,10 @@ fun Content.manage(application: Application) {
     div {
         classList("flavours")
         div { text("Flavour") }
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                window.location.hash = "#/add-flavour"
-                null
-            }
-        }
+        div { a("#/add-flavour") { button { text("Create") } } }
         fun flavour(flavour: FlavourVersion) {
             div { text(flavour.name) }
-            div {
-                val edit = button { text("Edit") }
-                edit.onclick = {
-                    window.location.hash = "#/flavours/${flavour.id}"
-                    null
-                }
-            }
+            div { a("#/flavours/${flavour.id}") { button { text("Edit") } } }
         }
         application.flavours.forEach {
             flavour(it)
@@ -492,22 +485,13 @@ fun Content.manage(application: Application) {
         classList("products")
         div { text("Product") }
         div { text("Flavour") }
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                window.location.hash = "#/add-product"
-                null
-            }
-        }
+        div { a("#/add-product") { button { text("Create") } } }
+
         fun product(product: ProductVersion) {
             div { text(product.name) }
             div { text(product.flavour.name) }
             div {
-                val edit = button { text("Edit") }
-                edit.onclick = {
-                    window.location.hash = "#/products/${product.id}"
-                    null
-                }
+                a("#/products/${product.id}") { button { text("Edit") } }
             }
         }
         application.products.forEach {
@@ -517,171 +501,110 @@ fun Content.manage(application: Application) {
 }
 
 fun Content.addFlavour(application: Application) {
-    var nameInput: HTMLInputElement? = null
-
-    h1 { text("Add Flavour") }
-    div {
-        classList("form")
-        div { text("Name") }
-        div { nameInput = textInput {} }
-        div { }
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                application.newFlavour(nameInput!!.value)
-                window.location.hash = "#/manage"
-                null
-            }
-        }
-    }
+    flavourForm("Add Flavour", application, FlavourModel(application.nextId))
 }
 
 fun Content.editFlavour(application: Application, id: Int) {
     val currentFlavour = application.flavours
         .first { it.id == id }
 
-    var nameInput: HTMLInputElement? = null
+    flavourForm("Edit Flavour", application, FlavourModel(currentFlavour))
+}
 
-    h1 { text("Edit Flavour") }
-    div {
+class FlavourModel(
+    val id: Int,
+    var name: String? = null
+): FormModel {
+    constructor(flavourVersion: FlavourVersion):
+            this(id = flavourVersion.id, name = flavourVersion.name)
+
+    override fun toEntityVersion(version: Int): EntityVersion {
+        return FlavourVersion(
+            id,
+            version,
+            0f,
+            name!!
+        )
+    }
+}
+
+fun Content.flavourForm(
+    title: String,
+    application: Application,
+    model: FlavourModel,
+) {
+    form(title, application, model) {
         classList("form")
-        div { text("Name") }
-        div {
-            nameInput = textInput {}
-            nameInput!!.value = currentFlavour.name
-        }
+        string("Name", model::name)
         div { }
-        div {
-            val button = button { text("Save") }
-            button.onclick = {
-                application.updateFlavour(currentFlavour, nameInput!!.value)
-                window.location.hash = "#/manage"
-                null
-            }
-        }
+        div { saveButton() }
     }
 }
 
 fun Content.addProduct(application: Application) {
-    var nameInput: HTMLInputElement? = null
-    var flavourInput: HTMLSelectElement? = null
-    var boxSizeInput: HTMLInputElement? = null
-    var statusInput: HTMLSelectElement? = null
-
-    var supplierNameInput: HTMLInputElement? = null
-    var supplierUrlInput: HTMLInputElement? = null
-    var supplierCodeInput: HTMLInputElement? = null
-
-    h1 { text("Add Product") }
-    div {
-        classList("form")
-        div { text("Name") }
-        div { nameInput = textInput {} }
-        div { text("Flavour") }
-        div { flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name }) }
-        div { text("Box size") }
-        div { boxSizeInput = textInput {} }
-        div { text("Status") }
-        div { statusInput = dropdown(ProductStatus.entries, {it.name}, {it.name}) }
-        div { text("Supplier name") }
-        div { supplierNameInput = textInput {} }
-        div { text("Supplier url") }
-        div { supplierUrlInput = textInput {} }
-        div { text("Supplier code") }
-        div { supplierCodeInput = textInput {} }
-        div { }
-        div {
-            val button = button { text("Create") }
-            button.onclick = {
-                val flavourId = flavourInput!!.value
-                val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.newProduct(
-                    nameInput!!.value,
-                    flavour,
-                    boxSizeInput!!.value.toInt(),
-                    ProductStatus.valueOf(statusInput!!.value),
-                    supplierNameInput!!.value.ifBlank { null },
-                    supplierUrlInput!!.value.ifBlank { null },
-                    supplierCodeInput!!.value.ifBlank { null },
-                )
-                window.location.hash = "#/manage"
-                null
-            }
-        }
-    }
+    productForm("Add Product", application, ProductModel(application.nextId))
 }
 
 fun Content.editProduct(application: Application, id: Int) {
     val currentProduct = application.products
         .first { it.id == id }
 
-    var nameInput: HTMLInputElement? = null
-    var flavourInput: HTMLSelectElement? = null
-    var boxSizeInput: HTMLInputElement? = null
-    var statusInput: HTMLSelectElement? = null
+    productForm("Edit Product", application, ProductModel(currentProduct))
+}
 
-    var supplierNameInput: HTMLInputElement? = null
-    var supplierUrlInput: HTMLInputElement? = null
-    var supplierCodeInput: HTMLInputElement? = null
-
-    h1 { text("Edit Product") }
-    div {
-        classList("form")
-        div { text("Name") }
-        div {
-            nameInput = textInput {}
-            nameInput!!.value = currentProduct.name
-        }
-        div { text("Flavour") }
-        div {
-            flavourInput = dropdown(application.flavours, { it.id.toString() }, { it.name })
-            flavourInput!!.value = currentProduct.flavour.id.toString()
-        }
-        div { text("Box Size") }
-        div {
-            boxSizeInput = textInput {}
-            boxSizeInput!!.value = currentProduct.boxSize.toString()
-        }
-        div { text("Status") }
-        div {
-            statusInput = dropdown(ProductStatus.entries, {it.name}, {it.name})
-            statusInput!!.value = currentProduct.status.name
-        }
-        div { text("Supplier name") }
-        div {
-            supplierNameInput = textInput {}
-            supplierNameInput!!.value = currentProduct.supplierData?.name?:""
-        }
-        div { text("Supplier url") }
-        div {
-            supplierUrlInput = textInput {}
-            supplierUrlInput!!.value = currentProduct.supplierData?.url?:""
-        }
-        div { text("Supplier code") }
-        div {
-            supplierCodeInput = textInput {}
-            supplierCodeInput!!.value = currentProduct.supplierData?.code?:""
-        }
-        div { }
-        div {
-            val button = button { text("Save") }
-            button.onclick = {
-                val flavourId = flavourInput!!.value
-                val flavour = application.flavours.first { it.id.toString() == flavourId }
-                application.updateProduct(
-                    currentProduct,
-                    nameInput!!.value,
-                    flavour,
-                    boxSizeInput!!.value.toInt(),
-                    ProductStatus.valueOf(statusInput!!.value),
-                    supplierNameInput!!.value.ifBlank { null },
-                    supplierUrlInput!!.value.ifBlank { null },
-                    supplierCodeInput!!.value.ifBlank { null },
-                )
-                window.location.hash = "#/manage"
-                null
+class ProductModel(
+    val id: Int,
+    var name: String? = null,
+    var flavour: FlavourVersion? = null,
+    var boxSize: Int? = null,
+    var status: ProductStatus? = null,
+    var supplierName: String? = null,
+    var supplierUrl: String? = null,
+    var supplierCode: String? = null,
+): FormModel {
+    constructor(productVersion: ProductVersion):
+            this(
+                productVersion.id,
+                productVersion.name,
+                productVersion.flavour,
+                productVersion.boxSize,
+                productVersion.status,
+                productVersion.supplierData?.name,
+                productVersion.supplierData?.url,
+                productVersion.supplierData?.code,
+            )
+    override fun toEntityVersion(version: Int): EntityVersion {
+        return ProductVersion(
+            id,
+            version,
+            0f,
+            name!!,
+            flavour!!,
+            boxSize!!,
+            status!!,
+            supplierName?.let {
+                SupplierData(it, supplierUrl!!, supplierCode!!)
             }
-        }
+        )
+    }
+}
+
+fun Content.productForm(
+    title: String,
+    application: Application,
+    model: ProductModel
+) {
+    form(title, application, model) {
+        classList("form")
+        string("Name", model::name)
+        dropdown("Flavour", model::flavour, application.flavours, { it.id.toString() }, { it.name })
+        int("Box Size", model::boxSize)
+        dropdown("Status", model::status, ProductStatus.entries, { it.name }, { it.name })
+        string("Supplier name", model::supplierName)
+        string("Supplier url", model::supplierUrl)
+        string("Supplier code", model::supplierCode)
+        div { }
+        div { saveButton() }
     }
 }
 

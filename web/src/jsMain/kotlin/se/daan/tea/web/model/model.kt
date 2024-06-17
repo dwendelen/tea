@@ -2,6 +2,7 @@ package se.daan.tea.web.model
 
 import se.daan.tea.api.LocalDateTime
 import se.daan.tea.api.ProductStatus
+import se.daan.tea.api.Version
 import kotlin.reflect.KClass
 
 class Application() {
@@ -12,83 +13,10 @@ class Application() {
             .values
             .sortedBy { it.id }
 
-    fun newFlavour(name: String): FlavourVersion {
-        val flavour = FlavourVersion(
-            versionStream.nextId<FlavourVersion>(),
-            versionStream.nextVersion,
-            0f,
-            name
-        )
-        versionStream.upsert(flavour)
-        return flavour
-    }
-
-    fun updateFlavour(flavour: FlavourVersion, name: String): FlavourVersion {
-        val newFlavour = FlavourVersion(
-            flavour.version,
-            versionStream.nextVersion,
-            0f,
-            name
-        )
-        versionStream.upsert(newFlavour)
-        return newFlavour
-    }
-
     val products: List<ProductVersion>
         get() = versionStream.getCurrentAll<ProductVersion>()
             .values
             .sortedBy { it.id }
-
-    fun newProduct(
-        name: String,
-        flavour: FlavourVersion,
-        boxSize: Int,
-        status: ProductStatus,
-        supplierName: String?,
-        supplierCode: String?,
-        supplierUrl: String?,
-    ): ProductVersion {
-        val productVersion = ProductVersion(
-            versionStream.nextId<ProductVersion>(),
-            versionStream.nextVersion,
-            0f,
-            name,
-            flavour,
-            boxSize,
-            status,
-            supplierName?.let {
-                SupplierData(it, supplierCode!!, supplierUrl!!)
-            }
-        )
-        versionStream.upsert(productVersion)
-        return productVersion
-    }
-
-    fun updateProduct(
-        productVersion: ProductVersion,
-        name: String,
-        flavour: FlavourVersion,
-        boxSize: Int,
-        status: ProductStatus,
-        supplierName: String?,
-        supplierCode: String?,
-        supplierUrl: String?,
-    ): ProductVersion {
-        val newVersion = ProductVersion(
-            productVersion.id,
-            versionStream.nextVersion,
-            0f,
-            name,
-            flavour,
-            boxSize,
-            status,
-            supplierName?.let {
-                SupplierData(it, supplierCode!!, supplierUrl!!)
-            }
-        )
-        versionStream.upsert(newVersion)
-        return newVersion
-    }
 
     val measurements: List<MeasurementVersion>
         get() = versionStream.getCurrentAll<MeasurementVersion>()
@@ -100,23 +28,14 @@ class Application() {
             .values
             .sortedBy { it.id }
 
-    fun newMeasurement(date: LocalDateTime, measurements: List<MeasurementData>): MeasurementVersion {
-        val measurementVersions = measurements.map {  m ->
-            ProductMeasurementVersion(
-                m.productVersion,
-                m.tray,
-                m.boxes,
-                m.loose
-            )
-        }
-        val measurement = MeasurementVersion(
-            versionStream.nextId<MeasurementVersion>(),
-            versionStream.nextVersion,
-            date,
-            measurementVersions
-        )
-        versionStream.upsert(measurement)
-        return measurement
+    val nextId: Int
+        get() = versionStream.nextVersion
+
+    val nextVersion: Version
+        get() = versionStream.nextVersion
+
+    fun upsert(entity: EntityVersion) {
+        versionStream.upsert(entity)
     }
 
     fun newDelta(date: LocalDateTime, deltas: List<DeltaData>): DeltaVersion {
@@ -129,7 +48,7 @@ class Application() {
             )
         }
         val delta = DeltaVersion(
-            versionStream.nextId<DeltaVersion>(),
+            versionStream.nextId,
             versionStream.nextVersion,
             date,
             deltaVersions
@@ -138,13 +57,6 @@ class Application() {
         return delta
     }
 }
-
-data class MeasurementData(
-    val productVersion: ProductVersion,
-    val tray: Int,
-    val boxes: Int,
-    val loose: Int
-)
 
 data class DeltaData(
     val productVersion: ProductVersion,
@@ -212,43 +124,35 @@ data class ProductDeltaVersion(
 class VersionStream() {
     val versionStream = mutableListOf<EntityVersion>()
     var nextVersion = 0
-    var state = mapOf<KClass<out EntityVersion>, Map<Int, EntityVersion>>()
+    var nextId = 0
+    var state = mapOf<Int, EntityVersion>()
     private var listeners: List<(EntityVersion) -> Unit> = emptyList()
 
     inline fun <reified T: EntityVersion> get(id: Int, version: Int): T? {
         return versionStream
-            .filterIsInstance<T>()
             .firstOrNull { it.id == id && it.version == version }
-    }
-
-    inline fun <reified T: EntityVersion> getCurrent(id: Int): T? {
-        return state[T::class]?.get(id) as T?
+            as? T
     }
 
     inline fun <reified T: EntityVersion> getCurrentAll(): Map<Int, T> {
-        return state[T::class] as Map<Int, T>? ?: emptyMap()
+        return state
+            .filter { it.value is T }
+            .mapValues { it.value as T }
     }
 
     fun upsert(entity: EntityVersion) {
         if(entity.version != nextVersion) {
             throw IllegalStateException()
         }
+        if(entity.id >= nextId) {
+            nextId = entity.id + 1
+        }
         nextVersion++
         versionStream.add(entity)
-        val currentEntityMap = state[entity::class]?: emptyMap()
-        val newEntityMap = currentEntityMap + (entity.id to entity)
-        state = state + (entity::class to newEntityMap)
+        state = state + (entity.id to entity)
         listeners.forEach {
             it(entity)
         }
-    }
-
-    inline fun <reified T: EntityVersion> nextId(): Int {
-        val maxId = (state[T::class] ?: emptyMap())
-            .keys
-            .maxOrNull()
-            ?: -1
-        return maxId + 1
     }
 
     fun onUpsert(fn: (EntityVersion) -> Unit) {
