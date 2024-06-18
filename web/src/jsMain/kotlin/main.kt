@@ -441,7 +441,7 @@ fun Content.deltaForm(title: String, application: Application, model: DeltaModel
             div { int(dlta::boxes) }
             div { int(dlta::loose) }
             div { }
-            div { saveButton() }
+            div { saveButton(); deleteButton() }
         }
     }
 }
