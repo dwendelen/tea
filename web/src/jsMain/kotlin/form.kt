@@ -81,8 +81,18 @@ class FormContent<T: FormModel>(
             null
         }
     }
+
+    fun deleteButton() {
+        val button = button { text("Delete") }
+        button.onclick = {
+            application.delete(model.id)
+            window.location.hash = "#/manage"
+            null
+        }
+    }
 }
 
 interface FormModel {
+    val id: Int
     fun toEntityVersion(version: Int): EntityVersion
 }

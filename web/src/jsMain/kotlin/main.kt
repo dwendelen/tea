@@ -70,6 +70,7 @@ fun main() {
                             )
                         }
                     )
+                    is Tombstone -> TombstoneVersion(it.id, it.version)
                 }
                 application.versionStream.upsert(item)
             }
@@ -89,6 +90,7 @@ fun main() {
                         is DeltaVersion -> Delta(item.id, item.version, item.date, item.deltas.map {
                             ProductDelta(it.productVersion.id, it.productVersion.version, it.tray, it.boxes, it.loose)
                         })
+                        is TombstoneVersion -> Tombstone(item.id, item.version)
                     }
 
                     window.fetch("https://api.dev.tea.daan.se/stream", RequestInit(
@@ -269,7 +271,7 @@ data class DeltaItem(val delta: DeltaVersion): HomePageItem {
 }
 
 class MeasurementModel(
-    val id: Int,
+    override val id: Int,
     var date: String?,
     val measurements: List<ProductMeasurementModel>
 ): FormModel {
@@ -362,12 +364,12 @@ private fun Content.measurementForm(
             div { lastProd?.loose?.let { text("(${it})") } }
         }
         div { }
-        div { saveButton() }
+        div { saveButton(); deleteButton() }
     }
 }
 
 class DeltaModel(
-    val id: Int,
+    override val id: Int,
     var date: String?,
     val deltas: List<ProductDeltaModel>
 ): FormModel {
@@ -567,7 +569,7 @@ fun Content.editFlavour(application: Application, id: Int) {
 }
 
 class FlavourModel(
-    val id: Int,
+    override val id: Int,
     var name: String? = null
 ): FormModel {
     constructor(flavourVersion: FlavourVersion):
@@ -608,7 +610,7 @@ fun Content.editProduct(application: Application, id: Int) {
 }
 
 class ProductModel(
-    val id: Int,
+    override val id: Int,
     var name: String? = null,
     var flavour: FlavourVersion? = null,
     var boxSize: Int? = null,

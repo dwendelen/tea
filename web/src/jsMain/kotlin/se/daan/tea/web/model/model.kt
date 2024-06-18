@@ -3,7 +3,6 @@ package se.daan.tea.web.model
 import se.daan.tea.api.LocalDateTime
 import se.daan.tea.api.ProductStatus
 import se.daan.tea.api.Version
-import kotlin.reflect.KClass
 
 class Application() {
     val versionStream = VersionStream()
@@ -36,6 +35,10 @@ class Application() {
 
     fun upsert(entity: EntityVersion) {
         versionStream.upsert(entity)
+    }
+
+    fun delete(id: Int) {
+        versionStream.upsert(TombstoneVersion(id, nextVersion))
     }
 
     fun newDelta(date: LocalDateTime, deltas: List<DeltaData>): DeltaVersion {
@@ -120,6 +123,10 @@ data class ProductDeltaVersion(
     val boxes: Int,
     val loose: Int
 )
+data class TombstoneVersion(
+    override val id: Int,
+    override val version: Int
+): EntityVersion
 
 class VersionStream() {
     val versionStream = mutableListOf<EntityVersion>()

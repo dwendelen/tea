@@ -86,6 +86,12 @@ data class ProductDelta(
     val loose: Int,
 )
 
+@Serializable
+data class Tombstone(
+    val id: Int,
+    override val version: Version
+): VersionedEntity
+
 @Serializable(with = LocalDateTimeSerializer::class)
 data class LocalDateTime(
     val year: Int,

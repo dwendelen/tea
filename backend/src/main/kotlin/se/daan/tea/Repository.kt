@@ -81,6 +81,12 @@ class VersionRepository(
                     }
                 )
             )
+            is Tombstone -> mapOf(
+                "pk" to AttributeValue.fromS("tea"),
+                "sk" to AttributeValue.fromS("stream-${sortableInt(versionedEntity.version)}"),
+                "t" to AttributeValue.fromS("Tombstone"),
+                "id" to AttributeValue.fromN(versionedEntity.id.toString()),
+            )
         }
         client.putItem(
             PutItemRequest.builder()
@@ -167,6 +173,10 @@ class VersionRepository(
                             Delta(id, version, fromString(it.string("d")), it.list("pd") { pd ->
                                 ProductDelta(pd.int("pi")!!, pd.int("pv")!!, pd.int("t")!!, pd.int("b")!!, pd.int("l")!!)
                             })
+                        }
+
+                        "Tombstone" -> {
+                            Tombstone(id, version)
                         }
 
                         else -> throw IllegalStateException()

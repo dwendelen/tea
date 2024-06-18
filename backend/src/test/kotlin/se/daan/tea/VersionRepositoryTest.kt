@@ -175,6 +175,11 @@ class VersionRepositoryTest {
         )))
     }
 
+    @Test
+    fun tombstone() {
+        writeRead(Tombstone(11, 12))
+    }
+
     private fun writeRead(expected: VersionedEntity) {
         versionRepository.append(expected)
         val actual = versionRepository.fetchAll(0).first()
