@@ -71,22 +71,22 @@ class FormContent<T: FormModel>(
         }
     }
 
-    fun saveButton() {
+    fun saveButton(redirect: String) {
         val button = button { text("Save") }
         button.onclick = {
             onSave()
             val entityVersion = model.toEntityVersion(application.nextVersion)
             application.upsert(entityVersion)
-            window.location.hash = "#/manage"
+            window.location.hash = redirect
             null
         }
     }
 
-    fun deleteButton() {
+    fun deleteButton(redirect: String) {
         val button = button { text("Delete") }
         button.onclick = {
             application.delete(model.id)
-            window.location.hash = "#/manage"
+            window.location.hash = redirect
             null
         }
     }

@@ -364,7 +364,7 @@ private fun Content.measurementForm(
             div { lastProd?.loose?.let { text("(${it})") } }
         }
         div { }
-        div { saveButton(); deleteButton() }
+        div { saveButton("#/home"); deleteButton("#/home") }
     }
 }
 
@@ -440,9 +440,9 @@ fun Content.deltaForm(title: String, application: Application, model: DeltaModel
             div { int(dlta::tray) }
             div { int(dlta::boxes) }
             div { int(dlta::loose) }
-            div { }
-            div { saveButton(); deleteButton() }
         }
+        div { }
+        div { saveButton("#/home"); deleteButton("#/home") }
     }
 }
 
@@ -594,7 +594,7 @@ fun Content.flavourForm(
         classList("form")
         string("Name", model::name)
         div { }
-        div { saveButton() }
+        div { saveButton("#/manage") }
     }
 }
 
@@ -661,7 +661,7 @@ fun Content.productForm(
         string("Supplier url", model::supplierUrl)
         string("Supplier code", model::supplierCode)
         div { }
-        div { saveButton() }
+        div { saveButton("#/manage") }
     }
 }
 
