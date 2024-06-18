@@ -36,6 +36,7 @@ variable "domain" {
 
 variable "extra-allowed-origins" {
   type = list(string)
+  default = []
 }
 
 variable "js-distribution-dir" {

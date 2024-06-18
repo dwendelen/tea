@@ -8,9 +8,12 @@ import se.daan.tea.api.*
 import se.daan.tea.web.model.*
 import kotlin.js.Date
 
+external object config {
+    val api: String
+}
 
 fun main() {
-    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit())
+    window.fetch("${config.api}/stream", RequestInit())
         .then { resp ->
             if (!resp.ok) {
                 window.location.hash = "#/error"
@@ -93,7 +96,7 @@ fun main() {
                         is TombstoneVersion -> Tombstone(item.id, item.version)
                     }
 
-                    window.fetch("https://api.dev.tea.daan.se/stream", RequestInit(
+                    window.fetch("${config.api}/stream", RequestInit(
                         method = "POST",
                         headers = js("{\"Content-Type\":\"application/json\"}"),
                         body = Json.encodeToString(mapped)

@@ -72,7 +72,14 @@ resource "aws_s3_object" "ui" {
   tags = local.default-tags
 }
 
-
+resource "aws_s3_object" "ui-config" {
+  bucket = aws_s3_bucket.ui.id
+  key = "config.js"
+  source = "config.js"
+  content_type = "application/javascript"
+  etag = filemd5("config.js")
+  tags = local.default-tags
+}
 
 resource "aws_s3_bucket_policy" "ui" {
   bucket = aws_s3_bucket.ui.bucket
