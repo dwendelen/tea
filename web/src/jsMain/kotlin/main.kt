@@ -491,11 +491,15 @@ fun Content.order(application: Application) {
 
     h1 { text("Calculation") }
     div {
-        text("Goal date: " + calculate.goalDate.toHumanString())
+        classList("calculation-summary")
+        div { text("Out of stock:") }
+        div { text(calculate.outOfStockDate?.toHumanString() ?: "none") }
+        div { text("Goal date:") }
+        div { text(calculate.goalDate.toHumanString()) }
+        div { text("Last measurement:") }
+        div { text(calculate.lastMeasurement?.date?.toHumanString() ?: "none") }
     }
-    div {
-        text("Last measurement: " + (calculate.lastMeasurement?.date?.toHumanString() ?: "none"))
-    }
+
     div {
         classList("calculation-lines")
         div { text("Product") }
@@ -525,6 +529,34 @@ fun Content.order(application: Application) {
             div { text(calc.current.toString()) }
             div { text(calc.toOrder.toString()) }
             div { text(calc.boxesToOrder.toString()) }
+        }
+    }
+
+    div {
+        classList("out-of-stock-lines")
+        div { text("Product") }
+        div { text("Start") }
+        div { text("End") }
+        div { text("From") }
+        div { text("To") }
+        div { text("Deltas") }
+        div { text("Diff") }
+        div { text("/") }
+        div { text("/") }
+        div { text("Days") }
+        div { text("Out of Stock") }
+        calculate.lines.forEach { calc ->
+            div { text(calc.productVersion.name) }
+            div { text(calc.start?.toHumanString()?:"") }
+            div { text(calc.end?.toHumanString()?:"") }
+            div { text(calc.amountStart.toString()) }
+            div { text(calc.amountEnd.toString()) }
+            div { text(calc.deltas.toString()) }
+            div { text(calc.diff.toString()) }
+            div { text(calc.days.toString()) }
+            div { text(calc.current.toString()) }
+            div { text(calc.daysOutOfStock?.toString()?:"") }
+            div { text(calc.outOfStockDate?.toHumanString()?:"") }
         }
     }
 }

@@ -2,6 +2,7 @@ package se.daan.tea.web.model
 
 import se.daan.tea.api.*
 import kotlin.math.ceil
+import kotlin.math.floor
 
 fun calculate(application: Application, now: LocalDateTime): Calculation {
     val goalDate = plusDays(now, 90).copy(hour = 0, minute = 0)
@@ -13,7 +14,11 @@ fun calculate(application: Application, now: LocalDateTime): Calculation {
             calculate(application, it, goalDate, lastMeasurement)
         }
 
-    return Calculation(goalDate, lastMeasurement, lines)
+    val minOutOfStock = lines
+        .mapNotNull { it.outOfStockDate }
+        .minOrNull()
+
+    return Calculation(minOutOfStock, goalDate, lastMeasurement, lines)
 }
 
 private fun calculate(application: Application, productVersion: ProductVersion, goalDate: LocalDateTime, lastMeasurement: MeasurementVersion?): CalculationLine {
@@ -23,7 +28,7 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         .dropWhile { it.second == null || it.second == 0 }
 
     if(mostRecentMeasurements.size < 2) {
-        return CalculationLine(productVersion, null, null, 0, 0, 0, 0, 0, null, 0,0, 0, 0,1)
+        return CalculationLine(productVersion, null, null, 0, 0, 0, 0, 0, null, 0,0, 0, 0,1, null, null)
     }
 
     val end = mostRecentMeasurements.first()
@@ -54,6 +59,8 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
     val goal = ceil(diff.toDouble() / days.toDouble() * goalDays).toInt()
     val toOrder = goal - current
     val boxesToOrder = ceil(toOrder.toFloat() / productVersion.boxSize.toDouble()).toInt()
+    val daysOutOfStock = floor(current * days.toDouble() / diff.toDouble()).toInt()
+    val outOfStockDate = plusDays(lastMeasurement.date, daysOutOfStock)
 
     return CalculationLine(
         productVersion,
@@ -69,7 +76,9 @@ private fun calculate(application: Application, productVersion: ProductVersion, 
         goal,
         current,
         toOrder,
-        boxesToOrder
+        boxesToOrder,
+        daysOutOfStock,
+        outOfStockDate
     )
 }
 
@@ -86,6 +95,7 @@ private fun total(productDelta: ProductDeltaVersion): Int {
 }
 
 data class Calculation(
+    val outOfStockDate: LocalDateTime?,
     val goalDate: LocalDateTime,
     val lastMeasurement: MeasurementVersion?,
     val lines: List<CalculationLine>
@@ -106,6 +116,8 @@ data class CalculationLine(
     val current: Int,
     val toOrder: Int,
     val boxesToOrder: Int,
+    val daysOutOfStock: Int?,
+    val outOfStockDate: LocalDateTime?
 ) {
 
 }

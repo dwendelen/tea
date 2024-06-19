@@ -50,9 +50,21 @@
     margin-top: 32px;
 }
 
+.calculation-summary {
+    display: grid;
+    grid-template-columns: 150px 200px;
+    margin-top: 32px;
+}
+
 .calculation-lines {
     display: grid;
     grid-template-columns: 150px 150px 150px 50px 50px 50px 50px 50px 50px 50px 50px 50px 100px;
+    margin-top: 32px;
+}
+
+.out-of-stock-lines {
+    display: grid;
+    grid-template-columns: 150px 150px 150px 50px 50px 50px 50px 50px 50px 50px 150px;
     margin-top: 32px;
 }
 
