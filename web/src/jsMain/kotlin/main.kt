@@ -468,6 +468,9 @@ fun Content.order(application: Application) {
     h1 { text("Order") }
     div {
         classList("order-lines")
+        div { text("#") }
+        div { text("Code") }
+        div { text("Name") }
         filtered.forEach { c ->
             val supplierData = c.productVersion.supplierData!!
             div { text(c.boxesToOrder.toString()) }
