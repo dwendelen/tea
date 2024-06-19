@@ -1,0 +1,16 @@
+plugins {
+    alias(libs.plugins.kotlinJvm)
+}
+
+group = "se.daan"
+version = "1.0.0"
+
+dependencies {
+    implementation(platform(libs.aws.bom))
+    implementation(libs.aws.dynamodb)
+    implementation(libs.aws.sso)
+}
+
+tasks.test {
+    useJUnitPlatform()
+}

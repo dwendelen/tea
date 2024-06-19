@@ -10,6 +10,7 @@ assertj = "3.25.3"
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 aws-bom = { module = "software.amazon.awssdk:bom", version.ref="aws-bom" }
 aws-dynamodb = { module = "software.amazon.awssdk:dynamodb" }
+aws-sso = { module = "software.amazon.awssdk:sso" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
