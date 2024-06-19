@@ -14,6 +14,7 @@ kotlin {
                     static = (static ?: mutableListOf()).apply {
                         // Serve sources to debug inside browser
                         add(project.projectDir.path)
+                        add(project.projectDir.resolve("src/jsMain/local").path)
                     }
                 }
             }
