@@ -532,6 +532,8 @@ fun Content.order(application: Application) {
         }
     }
 
+    val sortedLines = calculate.lines.sortedBy { it.outOfStockDate }
+
     div {
         classList("out-of-stock-lines")
         div { text("Product") }
@@ -545,7 +547,7 @@ fun Content.order(application: Application) {
         div { text("/") }
         div { text("Days") }
         div { text("Out of Stock") }
-        calculate.lines.forEach { calc ->
+        sortedLines.forEach { calc ->
             div { text(calc.productVersion.name) }
             div { text(calc.start?.toHumanString()?:"") }
             div { text(calc.end?.toHumanString()?:"") }
