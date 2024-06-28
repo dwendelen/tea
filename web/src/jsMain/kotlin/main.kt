@@ -16,6 +16,8 @@ fun main() {
     window.fetch("${config.api}/stream", RequestInit())
         .then { resp ->
             if (!resp.ok) {
+                console.error(resp.status)
+                console.error(resp.body)
                 window.location.hash = "#/error"
             }
             resp.text()
@@ -103,12 +105,15 @@ fun main() {
                     ))
                         .then { resp ->
                             if (!resp.ok) {
+                                console.error(resp.status)
+                                console.error(resp.body)
                                 window.location.hash = "#/error"
                             }
                             sending = false
                             maybeSend()
                         }
                         .catch {
+                            console.error(it)
                             window.location.hash = "#/error"
                         }
                 }
@@ -126,6 +131,7 @@ fun main() {
             }
         }
         .catch {
+            console.error(it)
             window.location.hash = "#/error"
         }
 }
