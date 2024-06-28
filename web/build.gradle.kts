@@ -26,5 +26,8 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.shared)
         }
+        jsMain.dependencies {
+            implementation(npm("chart.js", "~3.9.1", generateExternals = true))
+        }
     }
 }

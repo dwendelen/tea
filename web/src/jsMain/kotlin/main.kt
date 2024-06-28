@@ -1,8 +1,10 @@
+import kotlinx.browser.document
 import kotlinx.serialization.json.*
 
 import kotlinx.browser.window
 import kotlinx.dom.clear
 import kotlinx.serialization.encodeToString
+import org.w3c.dom.HTMLCanvasElement
 import org.w3c.fetch.*
 import se.daan.tea.api.*
 import se.daan.tea.web.model.*
@@ -137,6 +139,52 @@ fun main() {
 }
 
 fun Content.mainPage(application: Application) {
+    try {
+        //js("console.log(Chart)")
+        val ctx = document.createElement("canvas") as HTMLCanvasElement
+        parent.append(ctx)
+        Chart(ctx, object: Config {
+            override var type = "bar"
+            override var data: Data = object: PrimitiveData {
+                override var datasets: Array<PrimitiveDataSet> = arrayOf(object: PrimitiveDataSet {
+                    override var data: Array<Int> = arrayOf(1, 2, 3, 4)
+                })
+                override var labels = arrayOf("A", "B", "C", "D")
+            }
+            override var options = js("{}")
+            override var plugins = emptyList<dynamic>()
+        })
+
+//        Chart(ctx, object {
+//            val type = "bar"
+//            val data = object {
+//                val datasets = listOf(object {
+//                    val label = "# of Votes"
+//                    val data = listOf(12, 19, 3, 5, 2, 3)
+//
+//                })
+//            }
+//            val options = object {
+//                val scales = object {
+//                    val y = object {
+//                        val beginAtZero = true
+//                    }
+//                }
+//            }
+//        })
+//        console.log(chartJs.default)
+//        console.log(chartJs.default.Chart)
+//        Chart(ctx)
+//        js("console.log(Chart)")
+//        ChartMod().bla.ou.oneut
+//        ChartMod.Chart(ctx, js("{}"))
+//        chartjs.Chart(ctx, js("{}"))
+
+
+    } catch (e: Exception) {
+        console.log(e)
+    }
+
     div {
         classList("navigation-bar")
         a("#/home") { h1 { text("Home") } }
