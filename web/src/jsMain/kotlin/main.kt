@@ -468,6 +468,8 @@ private fun now(): LocalDateTime {
 }
 
 fun Content.order(application: Application) {
+    calculate2(application, now())
+
     val calculate = calculate(application, now())
     val filtered = calculate.lines.filter { it.boxesToOrder > 0 && it.productVersion.supplierData != null}
 

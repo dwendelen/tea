@@ -6,7 +6,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import se.daan.tea.api.LocalDateTime.Companion.DAYS_IN_MONTH
 import se.daan.tea.api.LocalDateTime.Companion.DAYS_OFFSET
 
 typealias Version = Int
@@ -136,12 +135,15 @@ data class LocalDateTime(
         val DAYS_OFFSET = listOf(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334)
     }
 }
+
 fun minusDays(date: LocalDateTime, days: Int): LocalDateTime {
     return toLocalDateTime(date.year, toDayOfYear(date) - days)
+        .copy(hour = date.hour, minute = date.minute)
 }
 
 fun plusDays(date: LocalDateTime, days: Int): LocalDateTime {
     return toLocalDateTime(date.year, toDayOfYear(date) + days)
+        .copy(hour = date.hour, minute = date.minute)
 }
 
 /**
