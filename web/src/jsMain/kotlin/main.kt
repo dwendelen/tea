@@ -7,6 +7,8 @@ import org.w3c.fetch.*
 import se.daan.tea.api.*
 import se.daan.tea.web.model.*
 import kotlin.js.Date
+import kotlin.math.ceil
+import kotlin.math.round
 
 external object config {
     val api: String
@@ -468,10 +470,7 @@ private fun now(): LocalDateTime {
 }
 
 fun Content.order(application: Application) {
-    calculate2(application, now())
-
-    val calculate = calculate(application, now())
-    val filtered = calculate.lines.filter { it.boxesToOrder > 0 && it.productVersion.supplierData != null}
+    val orders2 = calculate2(application, now())
 
     h1 { text("Order") }
     div {
@@ -479,9 +478,9 @@ fun Content.order(application: Application) {
         div { text("#") }
         div { text("Code") }
         div { text("Name") }
-        filtered.forEach { c ->
-            val supplierData = c.productVersion.supplierData!!
-            div { text(c.boxesToOrder.toString()) }
+        orders2.orders.forEach { o ->
+            val supplierData = o.productVersion.supplierData!!
+            div { text(o.amount.toString()) }
             div {
                 if(supplierData.url == null) {
                     if(supplierData.code != null) {
@@ -497,7 +496,132 @@ fun Content.order(application: Application) {
         }
     }
 
-    h1 { text("Calculation") }
+    h1 { text("Calculation Boxes") }
+    div {
+        classList("calculation-boxes")
+        div { }
+        div { text("Ratio") }
+        div { text("Goal") }
+        div { text("Current") }
+        div { text("Order") }
+        div { text("Boxes") }
+
+        div { text("Total") }
+        div { text(percentage(orders2.total.items[0].ratio)) }
+        div { text(oneDecimal(orders2.goal)) }
+        div { }
+        div { }
+        div { }
+
+        orders2.flavours.items.forEach { fl ->
+            div { classList("calculation-box-flavour"); text(fl.item.name) }
+            div { classList("calculation-box-flavour"); text(percentage(fl.ratio)) }
+            div { classList("calculation-box-flavour"); text(oneDecimal(fl.goal!!)) }
+            div { }
+            div { }
+            div { }
+
+            orders2.products[fl.item]!!.items.forEach { pr ->
+                div { classList("calculation-box-product"); text(pr.item.name) }
+                div { classList("calculation-box-product"); text(percentage(pr.ratio)) }
+                div { classList("calculation-box-product"); text(oneDecimal(pr.goal!!)) }
+                div { text(pr.current!!.toString()) }
+                div { text(oneDecimal(pr.toOrder!!)) }
+                div { text(oneDecimal(pr.boxes!!)) }
+            }
+        }
+    }
+
+    h1 { text("Calculation Ratios") }
+    div {
+        classList("calculation-ratio")
+        div { text("Total") }
+        div { text(orders2.total.startDate.toHumanDateString()) }
+        div { text("Deltas") }
+        div { text(orders2.total.endDate.toHumanDateString()) }
+        div { text("Diff") }
+        div { text("Ratio") }
+
+        div { text("Total") }
+        div { text(orders2.total.items[0].totalStart.toString()) }
+        div { text(orders2.total.items[0].deltas.toString()) }
+        div { text(orders2.total.items[0].totalEnd.toString()) }
+        div { text(orders2.total.items[0].diff.toString()) }
+        div { text(percentage(orders2.total.items[0].ratio)) }
+    }
+
+    div {
+        classList("calculation-ratio")
+        div { text("Flavour") }
+        div { text(orders2.flavours.startDate.toHumanDateString()) }
+        div { text("Deltas") }
+        div { text(orders2.flavours.endDate.toHumanDateString()) }
+        div { text("Diff") }
+        div { text("Ratio") }
+
+        orders2.flavours.items.forEach { fl ->
+            div { text(fl.item.name) }
+            div { text(fl.totalStart.toString()) }
+            div { text(fl.deltas.toString()) }
+            div { text(fl.totalEnd.toString()) }
+            div { text(fl.diff.toString()) }
+            div { text(percentage(fl.ratio)) }
+        }
+    }
+
+    orders2.products.entries.forEach { (fl, prods) ->
+        div {
+            classList("calculation-ratio")
+            div { text(fl.name) }
+            div { text(prods.startDate.toHumanDateString()) }
+            div { text("Deltas") }
+            div { text(prods.endDate.toHumanDateString()) }
+            div { text("Diff") }
+            div { text("Ratio") }
+
+            prods.items.forEach { prod ->
+                div { text(prod.item.name) }
+                div { text(prod.totalStart.toString()) }
+                div { text(prod.deltas.toString()) }
+                div { text(prod.totalEnd.toString()) }
+                div { text(prod.diff.toString()) }
+                div { text(percentage(prod.ratio)) }
+            }
+        }
+    }
+
+    val calculate = calculate(application, now())
+    val orders = calculate.lines
+        .filter { it.boxesToOrder > 0 && it.productVersion.supplierData != null}
+        .map { Order(it.productVersion, it.boxesToOrder) }
+
+    h1 { text("Order - legacy") }
+    div {
+        classList("order-lines")
+        div { text("#") }
+        div { text("Code") }
+        div { text("Name") }
+        orders.forEach { o ->
+            val supplierData = o.productVersion.supplierData!!
+            div { text(o.amount.toString()) }
+            div {
+                if(supplierData.url == null) {
+                    if(supplierData.code != null) {
+                        text(supplierData.code)
+                    }
+                } else {
+                    a(supplierData.url) {
+                        text(supplierData.code ?: "no-code")
+                    }
+                }
+            }
+            div { text(supplierData.name) }
+        }
+    }
+
+
+
+    h1 { text("Calculation - legacy") }
     div {
         classList("calculation-summary")
         div { text("Out of stock:") }
@@ -569,6 +693,14 @@ fun Content.order(application: Application) {
             div { text(calc.outOfStockDate?.toHumanString()?:"") }
         }
     }
+}
+
+fun percentage(double: Double): String {
+    return (round(double * 1000) / 10).toString() + "%"
+}
+
+fun oneDecimal(double: Double): String {
+    return (ceil(double * 10) / 10).toString()
 }
 
 fun Content.manage(application: Application) {

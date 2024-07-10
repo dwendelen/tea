@@ -50,6 +50,26 @@
     margin-top: 32px;
 }
 
+.calculation-boxes {
+    display: grid;
+    grid-template-columns: 200px 100px 100px 75px 75px 75px;
+    margin-top: 32px;
+}
+
+.calculation-box-flavour {
+    padding-left: 16px;
+}
+
+.calculation-box-product {
+    padding-left: 32px;
+}
+
+.calculation-ratio {
+    display: grid;
+    grid-template-columns: 200px 100px 75px 100px 75px 75px;
+    margin-top: 32px;
+}
+
 .calculation-summary {
     display: grid;
     grid-template-columns: 150px 200px;

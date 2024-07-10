@@ -123,11 +123,14 @@ data class LocalDateTime(
                 "${minute.toString().padStart(2, '0')}"
     }
     fun toHumanString(): String {
-        return "${year.toString().padStart(4, '0')}-" +
-                "${month.toString().padStart(2, '0')}-" +
-                "${day.toString().padStart(2, '0')} " +
+        return toHumanDateString() + " " +
                 "${hour.toString().padStart(2, '0')}:" +
                 "${minute.toString().padStart(2, '0')}"
+    }
+    fun toHumanDateString(): String {
+        return "${year.toString().padStart(4, '0')}-" +
+                "${month.toString().padStart(2, '0')}-" +
+                "${day.toString().padStart(2, '0')}"
     }
 
     companion object {

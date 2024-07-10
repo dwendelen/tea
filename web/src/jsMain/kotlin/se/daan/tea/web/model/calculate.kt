@@ -4,28 +4,59 @@ import se.daan.tea.api.*
 import kotlin.math.ceil
 import kotlin.math.floor
 
-fun calculate2(application: Application, now: LocalDateTime) {
+fun calculate2(application: Application, now: LocalDateTime): Calc2 {
     val goalDate = plusDays(now, 90).copy(hour = 0, minute = 0)
 
     val activeProducts = application.products.filter { it.status == ProductStatus.ACTIVE }
     val activeFlavours = activeProducts.map { it.flavour }.distinct()
 
     val total = calculate3(application, listOf(null), { m, _ -> total(m) }, { d, _ -> total(d) })
-    val byFlavour = calculate3(application, activeFlavours, { m, f -> total(m, f)}, {d, f -> total(d, f)})
-
     val rate = total.items[0].diff.toDouble() / daysBetween(total.startDate, total.endDate).toDouble()
-
-    console.log("Total rate ", rate)
     val goalDays = daysBetween(total.endDate, goalDate)
     val goal = goalDays * rate
-    console.log("Goal days ", goalDays)
-    console.log("Goal ", goal)
 
-    console.log(byFlavour.startDate, byFlavour.endDate)
+    val byFlavour = calculate3(application, activeFlavours, { m, f -> total(m, f)}, {d, f -> total(d, f)})
+    val enrichedByFlavour = byFlavour.copy(items = byFlavour.items.map { fl ->
+        fl.copy(goal = goal * fl.ratio)
+    })
 
-    byFlavour.items.forEach { flItem ->
-        console.log(flItem.item.name, " ", flItem.ratio, " ", flItem.ratio * goal)
+    val lastMeasurement = application.measurements.maxBy { it.date }
+
+    val products = enrichedByFlavour.items.associate { fl ->
+        val applicable = activeProducts.filter { it.flavour.id == fl.item.id }
+        val calc3 = calculate3(application, applicable, { m, p -> total(m, p) }, { d, p -> total(d, p) })
+
+        val enrichedCalc3Items = calc3.items.map { c3i ->
+            val itemGoal = c3i.ratio * fl.goal!!
+
+            val current = lastMeasurement.measurements
+                .firstOrNull { it.productVersion.id == c3i.item.id }
+                ?.let { total(it) }
+                ?: 0
+
+            val toOrder = itemGoal - current.toDouble()
+            val boxesToOrder = toOrder / c3i.item.boxSize.toDouble()
+
+            c3i.copy(
+                goal = itemGoal,
+                current = current,
+                toOrder = toOrder,
+                boxes = boxesToOrder
+            )
+        }
+
+        fl.item to calc3.copy(items = enrichedCalc3Items)
     }
+
+    val orders = products.values.flatMap { calc3 ->
+        calc3.items.map { i ->
+            val rounded = ceil(i.boxes!!).toInt()
+
+            Order(i.item, rounded)
+        }.filter { it.productVersion.supplierData != null && it.amount > 0 }
+    }
+
+    return Calc2(orders, goal, total, enrichedByFlavour, products)
 }
 
 fun <T> calculate3(
@@ -74,7 +105,7 @@ fun <T> calculate3(
     val totalDiff = diffs.sumOf { it.diff }
     val resultItems = diffs.map {
         val ratio = it.diff.toDouble() / totalDiff.toDouble()
-        Calc3Item(it.item, it.totalStart, it.deltas, it.totalEnd, it.diff, ratio)
+        Calc3Item(it.item, it.totalStart, it.deltas, it.totalEnd, it.diff, ratio, null, null, null, null)
     }
 
     return Calc3(start.date, end.date, resultItems)
@@ -83,6 +114,14 @@ fun <T> calculate3(
 data class DateTotal<T>(val date: LocalDateTime, val totals: List<ItemTotal<T>>)
 data class ItemTotal<T>(val item: T, val total: Int)
 data class ItemDiff<T>(val item: T, val totalStart: Int, val deltas: Int, val totalEnd: Int, val diff: Int)
+
+data class Calc2(
+    val orders: List<Order>,
+    val goal: Double,
+    val total: Calc3<Nothing?>,
+    val flavours: Calc3<FlavourVersion>,
+    val products: Map<FlavourVersion, Calc3<ProductVersion>>
+)
 
 data class Calc3<T>(
     val startDate: LocalDateTime,
@@ -96,7 +135,11 @@ data class Calc3Item<T>(
     val deltas: Int,
     val totalEnd: Int,
     val diff: Int,
-    val ratio: Double
+    val ratio: Double,
+    val goal: Double?,
+    val current: Int?,
+    val toOrder: Double?,
+    val boxes: Double?,
 )
 
 fun calculate(application: Application, now: LocalDateTime): Calculation {
@@ -209,6 +252,18 @@ private fun total(delta: DeltaVersion, flavourVersion: FlavourVersion): Int {
         .sumOf { total(it) }
 }
 
+private fun total(measurement: MeasurementVersion, productVersion: ProductVersion): Int {
+    return measurement.measurements
+        .filter { it.productVersion.id == productVersion.id }
+        .sumOf { total(it) }
+}
+
+private fun total(delta: DeltaVersion, productVersion: ProductVersion): Int {
+    return delta.deltas
+        .filter { it.productVersion.id == productVersion.id }
+        .sumOf { total(it) }
+}
+
 data class Calculation(
     val outOfStockDate: LocalDateTime?,
     val goalDate: LocalDateTime,
@@ -236,3 +291,8 @@ data class CalculationLine(
 ) {
 
 }
+
+data class Order(
+    val productVersion: ProductVersion,
+    val amount: Int
+)
