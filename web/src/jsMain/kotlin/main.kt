@@ -183,11 +183,15 @@ fun Content.mainPage(application: Application) {
                         if(parts.size == 2) {
                             window.location.hash = "#/m/home"
                         } else {
-                            val sub = parts[2]
-                            when (sub) {
-                                "home" -> mHome()
-                                //"add-measurement" -> mAddMeasurement(application)
-                                else -> error()
+                            div {
+                                classList("m")
+
+                                val sub = parts[2]
+                                when (sub) {
+                                    "home" -> mHome()
+                                    //"add-measurement" -> mAddMeasurement(application)
+                                    else -> error()
+                                }
                             }
                         }
                     }
@@ -857,7 +861,6 @@ fun Content.error() {
 }
 
 fun Content.mHome() {
-    classList("m")
     h1 { text("Home") }
     a("#/m/add-measurement") { button { text("Add measurement") } }
 }
