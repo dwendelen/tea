@@ -899,32 +899,38 @@ private fun Content.mMeasurementForm(
 
             div { text(meas.productVersion.name) }
             div {
+                meas.tray = 0
                 val t = text("")
-                var i = 0
                 val prevButton = button { text(lastProd?.tray?.toString()?:"") }
-                val plusOne = button { text("+1") }
-                val plusFive = button { text("+5") }
+                val plusOne = button { text("+ 1") }
+                val plusFive = button { text("+ 5") }
                 val zero = button { text("0") }
+                val minusOne = button { text("- 1") }
+
                 fun redraw() {
-                    t.textContent = i.toString()
+                    t.textContent = meas.tray.toString()
                 }
+
                 if(lastProd != null) {
-                    prevButton.onclick = {
-                        i = lastProd.tray
+                    prevButton.onmousedown = {
+                        meas.tray = lastProd.tray
                         redraw()
                     }
                 }
-
-                plusOne.onclick = {
-                    i += 1
+                plusOne.onmousedown = {
+                    meas.tray = meas.tray!! + 1
                     redraw()
                 }
-                plusFive.onclick = {
-                    i += 5
+                plusFive.onmousedown = {
+                    meas.tray = meas.tray!! + 5
                     redraw()
                 }
-                zero.onclick = {
-                    i = 0
+                zero.onmousedown = {
+                    meas.tray = 0
+                    redraw()
+                }
+                minusOne.onmousedown = {
+                    meas.tray = meas.tray!! - 1
                     redraw()
                 }
                 redraw()
