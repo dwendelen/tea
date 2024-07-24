@@ -189,7 +189,7 @@ fun Content.mainPage(application: Application) {
                                 val sub = parts[2]
                                 when (sub) {
                                     "home" -> mHome()
-                                    //"add-measurement" -> mAddMeasurement(application)
+                                    "add-measurement" -> mAddMeasurement(application)
                                     else -> error()
                                 }
                             }
@@ -863,4 +863,97 @@ fun Content.error() {
 fun Content.mHome() {
     h1 { text("Home") }
     a("#/m/add-measurement") { button { text("Add measurement") } }
+}
+
+fun Content.mAddMeasurement(application: Application) {
+    val dateString = now().toHumanString()
+
+    val previousMeasurement = application.measurements
+        .maxByOrNull { it.date }
+
+    val activeProducts = application.products
+        .filter { it.status == ProductStatus.ACTIVE || it.status == ProductStatus.DEPRECATED }
+
+    val model = MeasurementModel(
+        application.nextId,
+        dateString,
+        activeProducts.map { ProductMeasurementModel(it) }
+    )
+
+    mMeasurementForm("Add Measurement", application, model, previousMeasurement)
+}
+
+private fun Content.mMeasurementForm(
+    title: String,
+    application: Application,
+    model: MeasurementModel,
+    previousMeasurement: MeasurementVersion?
+) {
+    form(title, application, model) {
+        classList("m-add-measurement")
+        div { string(model::date) { classList("m-date") } }
+        h2 { text("Tray") }
+        model.measurements.forEach { meas ->
+            val lastProd =
+                previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
+
+            div { text(meas.productVersion.name) }
+            div {
+                val t = text("")
+                var i = 0
+                val prevButton = button { text(lastProd?.tray?.toString()?:"") }
+                val plusOne = button { text("+1") }
+                val plusFive = button { text("+5") }
+                val zero = button { text("0") }
+                fun redraw() {
+                    t.textContent = i.toString()
+                }
+                if(lastProd != null) {
+                    prevButton.onclick = {
+                        i = lastProd.tray
+                        redraw()
+                    }
+                }
+
+                plusOne.onclick = {
+                    i += 1
+                    redraw()
+                }
+                plusFive.onclick = {
+                    i += 5
+                    redraw()
+                }
+                zero.onclick = {
+                    i = 0
+                    redraw()
+                }
+                redraw()
+            }
+        }
+
+        h2 { text("Stock") }
+
+
+//        div { string(model::date) { classList("date") } }
+//        div { text("Tray") }
+//        div {}
+//        div { text("Boxes") }
+//        div {}
+//        div { text("Loose") }
+//        div {}
+//        model.measurements.forEach { meas ->
+//            val lastProd =
+//                previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
+//
+//            div { text(meas.productVersion.name) }
+//            div { int(meas::tray) }
+//            div { lastProd?.tray?.let { text("(${it})") } }
+//            div { int(meas::boxes) }
+//            div { lastProd?.boxes?.let { text("(${it})") } }
+//            div { int(meas::loose) }
+//            div { lastProd?.loose?.let { text("(${it})") } }
+//        }
+//        div { }
+//        div { saveButton("#/home"); deleteButton("#/home") }
+    }
 }

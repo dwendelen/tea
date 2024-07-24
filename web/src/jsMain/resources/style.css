@@ -101,11 +101,18 @@ body {
 .m {
     font-size: 64px;
 }
-
 .m h1 {
     font-size: 128px;
 }
-
+.m h2 {
+    font-size: 96px;
+}
 .m button {
     font-size: 64px;
+}
+.m input {
+    font-size: 64px;
+}
+.m-add-measurement input.m-date {
+    width: 640px;
 }

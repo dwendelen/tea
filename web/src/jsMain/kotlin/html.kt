@@ -43,6 +43,10 @@ open class Content(
         return simple("h1", content)
     }
 
+    fun h2(content: Content.() -> Unit): HTMLHeadingElement {
+        return simple("h2", content)
+    }
+
     fun div(content: DivContent.() -> Unit): HTMLDivElement {
         val div = document.createElement("div") as HTMLDivElement
         val oldParent = parent
