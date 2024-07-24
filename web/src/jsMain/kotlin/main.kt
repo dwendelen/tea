@@ -152,37 +152,44 @@ fun Content.mainPage(application: Application) {
                 window.location.hash = "#/home"
             } else {
                 parent.clear()
-                val end = path.indexOf('/', 2)
-                val correctedEnd = if(end == -1) {
-                    path.length
-                } else {
-                    end
-                }
-                val firstPart = path.substring(0..<correctedEnd)
+                val parts = path.split('/')
+                val firstPart = parts[1]
                 when (firstPart) {
-                    "#/error" -> error()
-                    "#/home" -> home(application)
-                    "#/add-measurement" -> addMeasurement(application)
-                    "#/edit-measurement" -> {
-                        val id = path.substring(end + 1).toInt()
+                    "error" -> error()
+                    "home" -> home(application)
+                    "add-measurement" -> addMeasurement(application)
+                    "edit-measurement" -> {
+                        val id = parts[2].toInt()
                         editMeasurement(application, id)
                     }
-                    "#/add-delta" -> addDelta(application)
-                    "#/edit-delta" -> {
-                        val id = path.substring(end + 1).toInt()
+                    "add-delta" -> addDelta(application)
+                    "edit-delta" -> {
+                        val id = parts[2].toInt()
                         editDelta(application, id)
                     }
-                    "#/order" -> order(application)
-                    "#/manage" -> manage(application)
-                    "#/add-flavour" -> addFlavour(application)
-                    "#/flavours" -> {
-                        val id = path.substring(end + 1).toInt()
+                    "order" -> order(application)
+                    "manage" -> manage(application)
+                    "add-flavour" -> addFlavour(application)
+                    "flavours" -> {
+                        val id = parts[2].toInt()
                         editFlavour(application, id)
                     }
-                    "#/add-product" -> addProduct(application)
-                    "#/products" -> {
-                        val id = path.substring(end + 1).toInt()
+                    "add-product" -> addProduct(application)
+                    "products" -> {
+                        val id = parts[2].toInt()
                         editProduct(application, id)
+                    }
+                    "m" -> {
+                        if(parts.size == 2) {
+                            window.location.hash = "#/m/home"
+                        } else {
+                            val sub = parts[2]
+                            when (sub) {
+                                "home" -> mHome()
+                                //"add-measurement" -> mAddMeasurement(application)
+                                else -> error()
+                            }
+                        }
                     }
                     else -> error()
                 }
@@ -847,4 +854,10 @@ fun Content.productForm(
 
 fun Content.error() {
     h1 { text("Error") }
+}
+
+fun Content.mHome() {
+    classList("m")
+    h1 { text("Home") }
+    a("#/m/add-measurement") { button { text("Add measurement") } }
 }

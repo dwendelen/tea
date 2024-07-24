@@ -1,3 +1,7 @@
+body {
+    text-size-adjust:none;
+}
+
 .navigation-bar {
     display: grid;
     grid-template-columns: 150px 150px 150px;
@@ -92,4 +96,16 @@
     display: grid;
     grid-template-columns: 25px 75px 500px;
     margin-top: 32px;
+}
+
+.m {
+    font-size: 64px;
+}
+
+.m h1 {
+    font-size: 128px;
+}
+
+.m button {
+    font-size: 64px;
 }
