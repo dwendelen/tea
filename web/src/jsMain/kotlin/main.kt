@@ -918,7 +918,11 @@ private fun Content.mMeasurementForm(
             mEntry(meas::boxes, lastProd?.boxes)
         }
 
-//        div { saveButton("#/home"); deleteButton("#/home") }
+        div {
+            classList("m-entry-row")
+            saveButton("#/m/home");
+            deleteButton("#/m/home")
+        }
     }
 }
 
