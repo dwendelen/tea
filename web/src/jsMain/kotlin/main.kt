@@ -903,9 +903,9 @@ private fun Content.mMeasurementForm(
                 meas.tray = 0
                 val t = textInput { classList("m-amount") }
                 val prevButton = button { classList("m-input-button"); text(lastProd?.tray?.toString()?:"") }
-                val plusOne = button { classList("m-input-button"); text("+ 1") }
-                val plusFive = button { classList("m-input-button"); text("+ 5") }
-                val minusOne = button { classList("m-input-button"); text("- 1") }
+                val plusFive = button { classList("m-input-button"); text("+5") }
+                val plusOne = button { classList("m-input-button"); text("+1") }
+                val minusOne = button { classList("m-input-button"); text("-1") }
                 val zero = button { classList("m-input-button"); text("0") }
 
                 t.disabled = true
@@ -915,24 +915,24 @@ private fun Content.mMeasurementForm(
                 }
 
                 if(lastProd != null) {
-                    prevButton.onmousedown = {
+                    prevButton.onclick = {
                         meas.tray = lastProd.tray
                         redraw()
                     }
                 }
-                plusOne.onmousedown = {
+                plusOne.onclick = {
                     meas.tray = meas.tray!! + 1
                     redraw()
                 }
-                plusFive.onmousedown = {
+                plusFive.onclick = {
                     meas.tray = meas.tray!! + 5
                     redraw()
                 }
-                zero.onmousedown = {
+                zero.onclick = {
                     meas.tray = 0
                     redraw()
                 }
-                minusOne.onmousedown = {
+                minusOne.onclick = {
                     meas.tray = meas.tray!! - 1
                     redraw()
                 }
