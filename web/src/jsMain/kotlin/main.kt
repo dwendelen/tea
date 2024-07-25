@@ -150,7 +150,11 @@ fun Content.mainPage(application: Application) {
     div {
         pathChanged { path ->
             if (path == "") {
-                window.location.hash = "#/home"
+                if(window.screen.availWidth < 600) {
+                    window.location.hash = "#/m/home"
+                } else {
+                    window.location.hash = "#/home"
+                }
             } else {
                 parent.clear()
                 val parts = path.split('/')
@@ -181,18 +185,14 @@ fun Content.mainPage(application: Application) {
                         editProduct(application, id)
                     }
                     "m" -> {
-                        if(parts.size == 2) {
-                            window.location.hash = "#/m/home"
-                        } else {
-                            div {
-                                classList("m")
+                        div {
+                            classList("m")
 
-                                val sub = parts[2]
-                                when (sub) {
-                                    "home" -> mHome()
-                                    "add-measurement" -> mAddMeasurement(application)
-                                    else -> error()
-                                }
+                            val sub = parts[2]
+                            when (sub) {
+                                "home" -> mHome()
+                                "add-measurement" -> mAddMeasurement(application)
+                                else -> error()
                             }
                         }
                     }
