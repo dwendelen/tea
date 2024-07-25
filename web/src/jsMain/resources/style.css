@@ -116,3 +116,15 @@ body {
 .m-add-measurement input.m-date {
     width: 640px;
 }
+.m-input-button {
+    width: 128px;
+    margin-left: 32px;
+    padding: 8px;
+    vertical-align: center;
+}
+.m-amount {
+    width: 128px;
+}
+.m-entry-row {
+    margin-bottom: 64px;
+}

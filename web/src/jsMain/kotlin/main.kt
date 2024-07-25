@@ -899,16 +899,19 @@ private fun Content.mMeasurementForm(
 
             div { text(meas.productVersion.name) }
             div {
+                classList("m-entry-row")
                 meas.tray = 0
-                val t = text("")
-                val prevButton = button { text(lastProd?.tray?.toString()?:"") }
-                val plusOne = button { text("+ 1") }
-                val plusFive = button { text("+ 5") }
-                val zero = button { text("0") }
-                val minusOne = button { text("- 1") }
+                val t = textInput { classList("m-amount") }
+                val prevButton = button { classList("m-input-button"); text(lastProd?.tray?.toString()?:"") }
+                val plusOne = button { classList("m-input-button"); text("+ 1") }
+                val plusFive = button { classList("m-input-button"); text("+ 5") }
+                val minusOne = button { classList("m-input-button"); text("- 1") }
+                val zero = button { classList("m-input-button"); text("0") }
+
+                t.disabled = true
 
                 fun redraw() {
-                    t.textContent = meas.tray.toString()
+                    t.value = meas.tray.toString()
                 }
 
                 if(lastProd != null) {
