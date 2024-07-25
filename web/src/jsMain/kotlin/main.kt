@@ -9,6 +9,7 @@ import se.daan.tea.web.model.*
 import kotlin.js.Date
 import kotlin.math.ceil
 import kotlin.math.round
+import kotlin.reflect.KMutableProperty0
 
 external object config {
     val api: String
@@ -897,72 +898,72 @@ private fun Content.mMeasurementForm(
             val lastProd =
                 previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
 
-            div { text(meas.productVersion.name) }
             div {
                 classList("m-entry-row")
-                meas.tray = 0
-                val t = textInput { classList("m-amount") }
-                val prevButton = button { classList("m-input-button"); text(lastProd?.tray?.toString()?:"") }
-                val plusFive = button { classList("m-input-button"); text("+5") }
-                val plusOne = button { classList("m-input-button"); text("+1") }
-                val minusOne = button { classList("m-input-button"); text("-1") }
-                val zero = button { classList("m-input-button"); text("0") }
-
-                t.disabled = true
-
-                fun redraw() {
-                    t.value = meas.tray.toString()
-                }
-
-                if(lastProd != null) {
-                    prevButton.onclick = {
-                        meas.tray = lastProd.tray
-                        redraw()
-                    }
-                }
-                plusOne.onclick = {
-                    meas.tray = meas.tray!! + 1
-                    redraw()
-                }
-                plusFive.onclick = {
-                    meas.tray = meas.tray!! + 5
-                    redraw()
-                }
-                zero.onclick = {
-                    meas.tray = 0
-                    redraw()
-                }
-                minusOne.onclick = {
-                    meas.tray = meas.tray!! - 1
-                    redraw()
-                }
-                redraw()
+                text(meas.productVersion.name)
             }
+            mEntry(meas::tray, lastProd?.tray)
         }
 
         h2 { text("Stock") }
+        model.measurements.forEach { meas ->
+            val lastProd =
+                previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
 
+            div {
+                classList("m-entry-row")
+                text(meas.productVersion.name)
+            }
+            mEntry(meas::loose, lastProd?.loose)
+            mEntry(meas::boxes, lastProd?.boxes)
+        }
 
-//        div { string(model::date) { classList("date") } }
-//        div { text("Tray") }
-//        div {}
-//        div { text("Boxes") }
-//        div {}
-//        div { text("Loose") }
-//        div {}
-//        model.measurements.forEach { meas ->
-//            val lastProd =
-//                previousMeasurement?.measurements?.firstOrNull { it.productVersion.id == meas.productVersion.id }
-//
-//            div { text(meas.productVersion.name) }
-//            div { int(meas::tray) }
-//            div { lastProd?.tray?.let { text("(${it})") } }
-//            div { int(meas::boxes) }
-//            div { lastProd?.boxes?.let { text("(${it})") } }
-//            div { int(meas::loose) }
-//            div { lastProd?.loose?.let { text("(${it})") } }
-//        }
-//        div { }
 //        div { saveButton("#/home"); deleteButton("#/home") }
+    }
+}
+
+private fun Content.mEntry(
+    property: KMutableProperty0<Int?>,
+    prev: Int?
+) {
+    div {
+        property.set(0)
+        val t = textInput { classList("m-amount") }
+        val prevButton = button { classList("m-input-button"); text(prev?.toString()?:"") }
+        val plusFive = button { classList("m-input-button"); text("+5") }
+        val plusOne = button { classList("m-input-button"); text("+1") }
+        val minusOne = button { classList("m-input-button"); text("-1") }
+        val zero = button { classList("m-input-button"); text("0") }
+
+        t.disabled = true
+
+        fun redraw() {
+            t.value = property.get().toString()
+        }
+
+        if(prev != null) {
+            prevButton.onclick = {
+                property.set(prev)
+                redraw()
+            }
+        }
+        plusOne.onclick = {
+            property.set(property.get()!! + 1)
+            redraw()
+        }
+        plusFive.onclick = {
+            property.set(property.get()!! + 5)
+            redraw()
+        }
+        zero.onclick = {
+            property.set(0)
+            redraw()
+        }
+        minusOne.onclick = {
+            property.set(property.get()!! - 1)
+
+            redraw()
+        }
+        redraw()
     }
 }
